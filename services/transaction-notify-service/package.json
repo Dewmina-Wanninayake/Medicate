@@ -1,0 +1,16 @@
+{
+  "name": "transaction-notify-service",
+  "version": "1.0.0",
+  "description": "Transaction and notification service for payments and messaging",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}
