@@ -8,7 +8,7 @@ import {
 import { cn } from "./utils";
 import { Button, buttonVariants } from "./button";
 
-function Pagination({ className, ...props }: React.ComponentProps<"nav">) {
+function Pagination({ className, ...props }) {
   return (
     <nav
       role="navigation"
@@ -23,7 +23,7 @@ function Pagination({ className, ...props }: React.ComponentProps<"nav">) {
 function PaginationContent({
   className,
   ...props
-}: React.ComponentProps<"ul">) {
+}) {
   return (
     <ul
       data-slot="pagination-content"
@@ -33,7 +33,7 @@ function PaginationContent({
   );
 }
 
-function PaginationItem({ ...props }: React.ComponentProps<"li">) {
+function PaginationItem({ ...props }) {
   return <li data-slot="pagination-item" {...props} />;
 }
 
@@ -68,7 +68,7 @@ function PaginationLink({
 function PaginationPrevious({
   className,
   ...props
-}: React.ComponentProps<typeof PaginationLink>) {
+}) {
   return (
     <PaginationLink
       aria-label="Go to previous page"
@@ -85,7 +85,7 @@ function PaginationPrevious({
 function PaginationNext({
   className,
   ...props
-}: React.ComponentProps<typeof PaginationLink>) {
+}) {
   return (
     <PaginationLink
       aria-label="Go to next page"
@@ -102,7 +102,7 @@ function PaginationNext({
 function PaginationEllipsis({
   className,
   ...props
-}: React.ComponentProps<"span">) {
+}) {
   return (
     <span
       aria-hidden
