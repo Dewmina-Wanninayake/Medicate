@@ -7,9 +7,18 @@ export default defineConfig({
   plugins: [
     // The React and Tailwind plugins are both required for Make, even if
     // Tailwind is not being actively used – do not remove them
-    react(),
+    react({
+      babel: {
+        parserOpts: {
+          plugins: ['typescript', 'jsx'],
+        },
+      },
+    }),
     tailwindcss(),
   ],
+  esbuild: {
+    loader: 'tsx',
+  },
   resolve: {
     alias: {
       // Alias @ to the src directory
