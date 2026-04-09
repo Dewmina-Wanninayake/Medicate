@@ -1,0 +1,2 @@
+-- Database initialization script
+-- Add your SQL commands here
