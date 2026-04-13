@@ -20,6 +20,29 @@ const initSocket = (io) => {
       io.to(targetId).emit('video_signal_received', { from: socket.id, signalData });
     });
 
+    socket.on('send_message', ({ appointmentId, senderId, receiverId, content, messageType }) => {
+      io.to(senderId).to(receiverId).emit('message_received', { 
+        appointmentId, 
+        senderId, 
+        content, 
+        messageType,
+        createdAt: new Date()
+      });
+    });
+
+    socket.on('join_queue', ({ doctorId, patientId }) => {
+      console.log(`Patient ${patientId} joining queue for doctor ${doctorId}`);
+      socket.join(`doctor_queue:${doctorId}`);
+    });
+
+    socket.on('start_call', ({ doctorId, patientId, appId, channel, token }) => {
+      console.log(`Doctor ${doctorId} starting call with patient ${patientId}`);
+      // Notify the specific patient
+      io.to(patientId).emit('CALL_INITIATED', { appId, channel, token });
+      // Also notify anyone in the doctor's queue (visibility/updates)
+      io.to(`doctor_queue:${doctorId}`).emit('queue_update', { activePatientId: patientId });
+    });
+
     socket.on('disconnect', () => {
       console.log('User disconnected:', socket.id);
     });

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Outlet } from "react-router";
+import { Outlet, useLocation } from "react-router";
 import { 
   LayoutDashboard, 
   Calendar, 
@@ -25,11 +25,14 @@ const navigation = [
 
 export default function MainLayout() {
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
+  const location = useLocation();
 
   const toggleSidebar = () => setIsSidebarExpanded(!isSidebarExpanded);
 
+  const isTelemedicine = location.pathname.startsWith('/telemedicine');
+
   return (
-    <div className="flex flex-col h-screen bg-background overflow-hidden">
+    <div className="flex flex-col h-screen bg-background overflow-hidden font-sans">
       {/* Top Header Navigation */}
       <Header toggleSidebar={toggleSidebar} />
 
@@ -38,7 +41,7 @@ export default function MainLayout() {
         <Sidebar isExpanded={isSidebarExpanded} navigation={navigation} />
 
         {/* Main Content Area */}
-        <main className="flex-1 overflow-y-auto p-6 md:p-8 bg-muted/20">
+        <main className={`flex-1 bg-muted/20 ${isTelemedicine ? 'p-0 overflow-hidden' : 'p-6 md:p-8 overflow-y-auto'}`}>
           <Outlet />
         </main>
       </div>
