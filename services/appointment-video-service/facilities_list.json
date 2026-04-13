@@ -1,0 +1,12 @@
+[
+  {
+    "name": "Central Hospital",
+    "location": "Downtown",
+    "specialties": ["Cardiology", "Neurology"]
+  },
+  {
+    "name": "Green Valley Clinic",
+    "location": "Suburbs",
+    "specialties": ["Pediatrics", "General Medicine"]
+  }
+]
