@@ -25,27 +25,7 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Navigation */}
-      <nav className="bg-card/80 backdrop-blur-lg border-b border-border sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-8">
-            <h1 className="text-2xl font-bold text-primary">Medicate</h1>
-            <div className="hidden md:flex gap-6">
-              <a href="#doctors" className="text-foreground hover:text-primary transition-colors">Doctors</a>
-              <a href="#specialties" className="text-foreground hover:text-primary transition-colors">Specialties</a>
-              <a href="#about" className="text-foreground hover:text-primary transition-colors">About</a>
-            </div>
-          </div>
-          <div className="flex items-center gap-4">
-            <Link to="/login">
-              <Button variant="outline" className="rounded-3xl">Login</Button>
-            </Link>
-            <Link to="/dashboard">
-              <Button className="rounded-3xl bg-primary hover:bg-accent">Dashboard</Button>
-            </Link>
-          </div>
-        </div>
-      </nav>
+
 
       {/* Hero Section */}
       <section className="max-w-7xl mx-auto px-6 py-16 pb-24 md:pb-16">
