@@ -5,13 +5,12 @@ import AppointmentsPage from "./pages/AppointmentsPage";
 import PatientRecordsPage from "./pages/PatientRecordsPage";
 import TelemedicinePage from "./pages/TelemedicinePage";
 import LoginPage from "./pages/LoginPage";
-import DashboardLayout from "./layouts/DashboardLayout";
+import MainLayout from "./layouts/MainLayout";
+import PaymentsPage from "./pages/PaymentsPage";
+import SettingsPage from "./pages/SettingsPage";
+import TelemedicineHubPage from "./pages/TelemedicineHubPage";
 
 export const router = createBrowserRouter([
-  {
-    path: "/",
-    Component: LandingPage,
-  },
   {
     path: "/login",
     Component: LoginPage,
@@ -21,11 +20,14 @@ export const router = createBrowserRouter([
     Component: TelemedicinePage,
   },
   {
-    path: "/dashboard",
-    Component: DashboardLayout,
+    Component: MainLayout,
     children: [
       {
-        index: true,
+        path: "/",
+        Component: LandingPage,
+      },
+      {
+        path: "dashboard",
         Component: DoctorDashboard,
       },
       {
@@ -35,6 +37,18 @@ export const router = createBrowserRouter([
       {
         path: "patients",
         Component: PatientRecordsPage,
+      },
+      {
+        path: "telemedicine",
+        Component: TelemedicineHubPage,
+      },
+      {
+        path: "payments",
+        Component: PaymentsPage,
+      },
+      {
+        path: "settings",
+        Component: SettingsPage,
       },
     ],
   },
