@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: backend
-  namespace: healthiest-app
+  namespace: medicate
   labels:
     app: backend
     version: v1

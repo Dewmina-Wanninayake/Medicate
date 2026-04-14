@@ -1,48 +1,59 @@
 version: '3.8'
 
 services:
-  backend:
+  appointment-service:
     build:
-      context: .
+      context: ./services/appointment-video-service
       dockerfile: Dockerfile
-    container_name: healthiest-app-backend
+    container_name: medicate-appointment-service
     ports:
-      - "5000:5000"
+      - "5003:5003"
     environment:
-      - NODE_ENV=development
-      - MONGODB_URI=mongodb://mongodb:27017/healthiest-app
+      - PORT=5003
+      - MONGO_URI=mongodb://mongodb:27017/medicate_appointments
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - AGORA_APP_ID=e7f6e9aeecf14b2ba10e3f40be9f56e7
+      - AGORA_APP_CERTIFICATE=fb90ec88697e43a489af7be085b3ea59
     depends_on:
       - mongodb
-    volumes:
-      - .:/app
-      - /app/node_modules
-    restart: unless-stopped
+      - redis
     networks:
-      - healthiest-network
+      - medicate-network
+
+  web-client:
+    build:
+      context: ./web-client
+      dockerfile: Dockerfile
+    container_name: medicate-web-client
+    ports:
+      - "3000:80"
+    depends_on:
+      - appointment-service
+    networks:
+      - medicate-network
 
   mongodb:
     image: mongo:7-alpine
-    container_name: healthiest-app-mongodb
+    container_name: medicate-mongodb
     ports:
       - "27017:27017"
-    environment:
-      - MONGO_INITDB_ROOT_USERNAME=admin
-      - MONGO_INITDB_ROOT_PASSWORD=admin123
-      - MONGO_INITDB_DATABASE=healthiest-app
     volumes:
-      - mongodb-data:/data/db
-    restart: unless-stopped
+      - mongodb_data:/data/db
     networks:
-      - healthiest-network
-    healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      - medicate-network
 
-volumes:
-  mongodb-data:
+  redis:
+    image: redis:7-alpine
+    container_name: medicate-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - medicate-network
 
 networks:
-  healthiest-network:
+  medicate-network:
     driver: bridge
+
+volumes:
+  mongodb_data:
