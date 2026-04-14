@@ -18,3 +18,6 @@ build/
 # OS files
 .DS_Store
 Thumbs.db
+
+k8s/common/secret.yaml
+k8s/**/secret.yaml
