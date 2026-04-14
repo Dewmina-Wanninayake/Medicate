@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: medicate-config
+  namespace: medicate
+data:
+  AGORA_APP_ID: "e7f6e9aeecf14b2ba10e3f40be9f56e7"
+  NODE_ENV: "production"

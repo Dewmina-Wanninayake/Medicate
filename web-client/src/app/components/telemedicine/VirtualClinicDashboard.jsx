@@ -32,7 +32,7 @@ export default function VirtualClinicDashboard() {
       // payload expects: { appId, channel, token }
       console.log('Call Orchestrator Triggered Activation', payload);
       setAgoraCredentials(payload);
-      
+
       // Shift out of Queue immediately
       setSessionState(STATES.CONNECTING);
     });
@@ -45,17 +45,22 @@ export default function VirtualClinicDashboard() {
 
     return () => {
       newSocket.disconnect();
-      window.removeEventListener('simulated-socket-call', () => {});
+      window.removeEventListener('simulated-socket-call', () => { });
     };
   }, []);
 
   const handleJoinQueue = (doctor) => {
     setSelectedDoctor(doctor);
-    setQueuePosition(3); 
+    setQueuePosition(3);
     setSessionState(STATES.QUEUED);
 
     // Mock emitting queue join to orchestrator
-    if (socket) socket.emit('join_queue', { doctorId: doctor.id });
+    if (socket) {
+      socket.emit('join_queue', {
+        doctorId: doctor.id,
+        patientId: 'patient_001' // Mock patient ID matching the test case
+      });
+    }
   };
 
   const handleLeaveSession = () => {
@@ -67,21 +72,21 @@ export default function VirtualClinicDashboard() {
 
   // Callback coming deeply from Agora UIKit
   const handleJoinChannelSuccess = () => {
-     console.log("Agora P2P Connection Fully Established. Injecting UI.");
-     setSessionState(STATES.IN_CALL);
+    console.log("Agora P2P Connection Fully Established. Injecting UI.");
+    setSessionState(STATES.IN_CALL);
   };
 
   return (
     <div className="w-full h-full flex flex-col relative overflow-hidden bg-gray-50">
-      
+
       {sessionState === STATES.IDLE && (
         <DoctorDiscovery onJoinQueue={handleJoinQueue} />
       )}
-      
+
       {sessionState === STATES.QUEUED && (
-        <WaitingRoom 
-          doctor={selectedDoctor} 
-          position={queuePosition} 
+        <WaitingRoom
+          doctor={selectedDoctor}
+          position={queuePosition}
           onLeave={handleLeaveSession}
           // The Waiting Room progress debug
           simulateProgress={() => {
@@ -89,12 +94,12 @@ export default function VirtualClinicDashboard() {
               setQueuePosition(prev => prev - 1);
             } else {
               // Trigger Simulated WebSocket event
-              const event = new CustomEvent('simulated-socket-call', { 
+              const event = new CustomEvent('simulated-socket-call', {
                 detail: { appId: "mock-id", channel: "mock-channel", token: null }
               });
               window.dispatchEvent(event);
             }
-          }} 
+          }}
         />
       )}
 
@@ -104,11 +109,11 @@ export default function VirtualClinicDashboard() {
       */}
       {sessionState === STATES.CONNECTING && (
         <div className="absolute inset-0 z-50 bg-gray-900/95 backdrop-blur-xl flex flex-col items-center justify-center animate-in fade-in duration-500">
-           <Loader2 className="w-16 h-16 text-primary animate-spin mb-6" />
-           <h2 className="text-3xl font-bold text-white mb-2">Initializing Video Engine...</h2>
-           <p className="text-gray-400 max-w-sm text-center font-medium">
-             Doctor {selectedDoctor?.name.split(' ')[1]} has admitted you. Establishing an encrypted P2P bridge via Agora...
-           </p>
+          <Loader2 className="w-16 h-16 text-primary animate-spin mb-6" />
+          <h2 className="text-3xl font-bold text-white mb-2">Initializing Video Engine...</h2>
+          <p className="text-gray-400 max-w-sm text-center font-medium">
+            Doctor {selectedDoctor?.name.split(' ')[1]} has admitted you. Establishing an encrypted P2P bridge via Agora...
+          </p>
         </div>
       )}
 
@@ -117,15 +122,16 @@ export default function VirtualClinicDashboard() {
         Wait: We must mount it during CONNECTING so it can fire handleJoinChannelSuccess!
       */}
       {(sessionState === STATES.CONNECTING || sessionState === STATES.IN_CALL) && agoraCredentials && (
-         <div className={`absolute inset-0 w-full h-full z-40 transition-opacity duration-700 ease-in-out ${sessionState === STATES.IN_CALL ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-            <CallCanvas 
-              doctor={selectedDoctor} 
-              agoraCredentials={agoraCredentials}
-              onJoinSuccess={handleJoinChannelSuccess}
-              onEndCall={handleLeaveSession}
-            />
-         </div>
+        <div className={`absolute inset-0 w-full h-full z-40 transition-opacity duration-700 ease-in-out ${sessionState === STATES.IN_CALL ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+          <CallCanvas
+            doctor={selectedDoctor}
+            agoraCredentials={agoraCredentials}
+            onJoinSuccess={handleJoinChannelSuccess}
+            onEndCall={handleLeaveSession}
+          />
+        </div>
       )}
     </div>
   );
 }
+

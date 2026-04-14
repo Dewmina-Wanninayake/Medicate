@@ -129,3 +129,4 @@ export default function WaitingRoom({ doctor, position, onLeave, simulateProgres
     </div>
   );
 }
+
