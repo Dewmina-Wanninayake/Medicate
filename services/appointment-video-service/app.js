@@ -13,9 +13,6 @@ const server = http.createServer(app);
 app.use(cors());
 app.use(express.json());
 
-// Database Connection
-connectDB();
-
 // Root Route
 app.get('/', (req, res) => {
   res.json({ message: 'Appointment & Consultation Microservice (Refactored) is running' });
@@ -44,7 +41,14 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Something went wrong!' });
 });
 
-const PORT = process.env.PORT || 5003;
-server.listen(PORT, () => {
-  console.log(`Appointment Service running on port ${PORT}`);
-});
+const startServer = async () => {
+  await connectDB();
+  require('./config/redis');
+
+  const PORT = process.env.PORT || 5003;
+  server.listen(PORT, () => {
+    console.log(`Appointment Service running on port ${PORT}`);
+  });
+};
+
+startServer();

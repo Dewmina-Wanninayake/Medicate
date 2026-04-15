@@ -1,22 +1,22 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: appointment-service
+  name: appointment-video-service
   namespace: medicate
   labels:
-    app: appointment-service
+    app: appointment-video-service
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: appointment-service
+      app: appointment-video-service
   template:
     metadata:
       labels:
-        app: appointment-service
+        app: appointment-video-service
     spec:
       containers:
-      - name: appointment-service
+      - name: appointment-video-service
         image: medicate-appointment-service:latest
         imagePullPolicy: IfNotPresent
         ports:
@@ -43,17 +43,3 @@ spec:
             secretKeyRef:
               name: medicate-secrets
               key: AGORA_APP_CERTIFICATE
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: appointment-service
-  namespace: medicate
-spec:
-  selector:
-    app: appointment-service
-  ports:
-  - protocol: TCP
-    port: 5006
-    targetPort: 5006
-  type: ClusterIP
