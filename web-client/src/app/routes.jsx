@@ -8,7 +8,6 @@ import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import AdminDashboard from "./pages/AdminDashboard";
 import ProfilePage from "./pages/ProfilePage";
-import DashboardLayout from "./layouts/DashboardLayout";
 import MainLayout from "./layouts/MainLayout";
 import PaymentsPage from "./pages/PaymentsPage";
 import SettingsPage from "./pages/SettingsPage";
@@ -48,7 +47,7 @@ export const router = createBrowserRouter([
     path: "/dashboard",
     element: (
       <ProtectedRoute>
-        <DashboardLayout />
+        <MainLayout />
       </ProtectedRoute>
     ),
     children: [
