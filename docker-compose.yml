@@ -1,3 +1,4 @@
+version: '2.1'
 services:
 
   user-identity-service:
@@ -40,25 +41,77 @@ services:
     networks:
       - medicate-network
 
+  appointment-service:
+    build:
+      context: ./services/appointment-video-service
+      dockerfile: Dockerfile
+    container_name: medicate-appointment-service
+    ports:
+      - "5004:5003"
+    environment:
+      - PORT=5003
+      - MONGO_URI=mongodb://mongodb:27017/medicate_appointments
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=
+      - AGORA_APP_ID=e7f6e9aeecf14b2ba10e3f40be9f56e7
+      - AGORA_APP_CERTIFICATE=fb90ec88697e43a489af7be085b3ea59
+    restart: on-failure
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - medicate-network
+
+  web-client:
+    build:
+      context: ./web-client
+      dockerfile: Dockerfile
+    container_name: medicate-web-client
+    ports:
+      - "3000:80"
+    environment:
+      - REACT_APP_APPOINTMENT_SERVICE_URL=http://localhost:5004
+    depends_on:
+      - appointment-service
+    networks:
+      - medicate-network
+
   mongodb:
     image: mongo:7
     container_name: medicate-mongodb
     ports:
       - "27017:27017"
     volumes:
-      - mongodb-data:/data/db
-    restart: unless-stopped
+      - mongodb_data:/data/db
     networks:
       - medicate-network
     healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 15s
 
-volumes:
-  mongodb-data:
+  redis:
+    image: redis:alpine
+    container_name: medicate-redis
+    ports:
+      - "6380:6379"
+    networks:
+      - medicate-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
 networks:
   medicate-network:
     driver: bridge
+
+volumes:
+  mongodb_data:

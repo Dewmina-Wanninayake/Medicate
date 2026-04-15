@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: appointment-service
+  namespace: medicate
+  labels:
+    app: appointment-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: appointment-service
+  template:
+    metadata:
+      labels:
+        app: appointment-service
+    spec:
+      containers:
+      - name: appointment-service
+        image: medicate-appointment-service:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 5006
+        env:
+        - name: PORT
+          value: "5006"
+        - name: MONGO_URI
+          valueFrom:
+            secretKeyRef:
+              name: medicate-secrets
+              key: MONGO_URI
+        - name: REDIS_HOST
+          value: "redis-service"
+        - name: REDIS_PORT
+          value: "6379"
+        - name: AGORA_APP_ID
+          valueFrom:
+            configMapKeyRef:
+              name: medicate-config
+              key: AGORA_APP_ID
+        - name: AGORA_APP_CERTIFICATE
+          valueFrom:
+            secretKeyRef:
+              name: medicate-secrets
+              key: AGORA_APP_CERTIFICATE
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: appointment-service
+  namespace: medicate
+spec:
+  selector:
+    app: appointment-service
+  ports:
+  - protocol: TCP
+    port: 5006
+    targetPort: 5006
+  type: ClusterIP

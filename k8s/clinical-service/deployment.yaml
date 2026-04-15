@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: clinical-service
+  namespace: medicate
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: clinical-service
+  template:
+    metadata:
+      labels:
+        app: clinical-service
+    spec:
+      containers:
+        - name: clinical-service
+          image: clinical-service:v1
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 5000
+
+          env:
+            - name: PORT
+              value: "5000"
+
+            - name: MONGO_URI
+              valueFrom:
+                secretKeyRef:
+                  name: medicate-secrets
+                  key: MONGO_URI
+
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: medicate-secrets
+                  key: OPENAI_API_KEY
+
+            - name: CLOUDINARY_CLOUD_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: medicate-config
+                  key: CLOUDINARY_CLOUD_NAME
+
+            - name: CLOUDINARY_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: medicate-secrets
+                  key: CLOUDINARY_API_KEY
+
+            - name: CLOUDINARY_API_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: medicate-secrets
+                  key: CLOUDINARY_API_SECRET
