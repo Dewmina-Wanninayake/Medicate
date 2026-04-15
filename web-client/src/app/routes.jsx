@@ -14,6 +14,14 @@ import SettingsPage from "./pages/SettingsPage";
 import TelemedicineHubPage from "./pages/TelemedicineHubPage";
 import DashboardRouter from "./pages/DashboardRouter";
 import { ProtectedRoute, RoleRoute } from "./components/ProtectedRoute";
+import ReportsPage from "./pages/ReportsPage";
+
+// Doctor Pages
+import DoctorAppointments from "./pages/doctor/DoctorAppointments";
+import DoctorPatients from "./pages/doctor/DoctorPatients";
+import DoctorSchedule from "./pages/doctor/DoctorSchedule";
+import DoctorMessages from "./pages/doctor/DoctorMessages";
+import DoctorProfile from "./pages/doctor/DoctorProfile";
 
 export const router = createBrowserRouter([
   {
@@ -81,8 +89,33 @@ export const router = createBrowserRouter([
         Component: PaymentsPage,
       },
       {
+        path: "reports",
+        Component: ReportsPage,
+      },
+      {
         path: "settings",
         Component: SettingsPage,
+      },
+      // Doctor Routes
+      {
+        path: "doctor/appointments",
+        Component: DoctorAppointments,
+      },
+      {
+        path: "doctor/patients",
+        Component: DoctorPatients,
+      },
+      {
+        path: "doctor/schedule",
+        Component: DoctorSchedule,
+      },
+      {
+        path: "doctor/messages",
+        Component: DoctorMessages,
+      },
+      {
+        path: "doctor/profile",
+        Component: DoctorProfile,
       },
     ],
   },
