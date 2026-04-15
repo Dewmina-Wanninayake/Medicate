@@ -20,29 +20,10 @@ spec:
         image: medicate-appointment-service:latest
         imagePullPolicy: IfNotPresent
         ports:
-        - containerPort: 5006
-        env:
-        - name: PORT
-          value: "5006"
-        - name: MONGO_URI
-          valueFrom:
-            secretKeyRef:
-              name: medicate-secrets
-              key: MONGO_URI
-        - name: REDIS_HOST
-          value: "redis-service"
-        - name: REDIS_PORT
-          value: "6379"
-        - name: AGORA_APP_ID
-          valueFrom:
-            configMapKeyRef:
-              name: medicate-config
-              key: AGORA_APP_ID
-        - name: AGORA_APP_CERTIFICATE
-          valueFrom:
-            secretKeyRef:
-              name: medicate-secrets
-              key: AGORA_APP_CERTIFICATE
+        - containerPort: 5003
+        envFrom:
+        - secretRef:
+            name: appointment-service-secrets
 ---
 apiVersion: v1
 kind: Service
@@ -54,6 +35,6 @@ spec:
     app: appointment-service
   ports:
   - protocol: TCP
-    port: 5006
-    targetPort: 5006
+    port: 5003
+    targetPort: 5003
   type: ClusterIP
