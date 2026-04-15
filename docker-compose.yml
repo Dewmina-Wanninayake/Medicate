@@ -13,7 +13,9 @@ services:
       - PORT=3001
       - MONGO_URI=mongodb://mongodb:27017/medicate_users
       - JWT_SECRET=${JWT_SECRET:-your-super-secret-jwt-key-please-change-in-production}
-      - JWT_EXPIRES_IN=15m
+      - JWT_ISSUER=medicate-user-identity-service
+      - JWT_AUDIENCE=medicate-platform
+      - JWT_EXPIRES_IN=1h
       - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET:-your-super-secret-refresh-key-please-change-in-production}
       - JWT_REFRESH_EXPIRES_IN=7d
     depends_on:
@@ -38,6 +40,9 @@ services:
       - REDIS_PASSWORD=
       - AGORA_APP_ID=e7f6e9aeecf14b2ba10e3f40be9f56e7
       - AGORA_APP_CERTIFICATE=fb90ec88697e43a489af7be085b3ea59
+      - JWT_SECRET=${JWT_SECRET:-your-super-secret-jwt-key-please-change-in-production}
+      - JWT_ISSUER=medicate-user-identity-service
+      - JWT_AUDIENCE=medicate-platform
     restart: on-failure
     depends_on:
       mongodb:
@@ -59,6 +64,9 @@ services:
       - PORT=5000
       - MONGO_URI=mongodb://mongodb:27017/medicate_clinical
       - NODE_ENV=production
+      - JWT_SECRET=${JWT_SECRET:-your-super-secret-jwt-key-please-change-in-production}
+      - JWT_ISSUER=medicate-user-identity-service
+      - JWT_AUDIENCE=medicate-platform
       - OPENAI_API_KEY=${OPENAI_API_KEY:-sk-placeholder-key}
       - CLOUDINARY_API_KEY=${CLOUDINARY_API_KEY:-}
       - CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET:-}
@@ -82,6 +90,9 @@ services:
       - PORT=3003
       - MONGODB_URI=mongodb://mongodb:27017/medicate_transactions
       - NODE_ENV=production
+      - JWT_SECRET=${JWT_SECRET:-your-super-secret-jwt-key-please-change-in-production}
+      - JWT_ISSUER=medicate-user-identity-service
+      - JWT_AUDIENCE=medicate-platform
       - STRIPE_API_KEY=${STRIPE_API_KEY:-sk_test_placeholder}
       - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET:-whsec_placeholder}
       - NODEMAILER_EMAIL=${NODEMAILER_EMAIL:-noreply@medicate.com}
@@ -105,10 +116,12 @@ services:
     ports:
       - "3000:80"
     environment:
-      - VITE_APPOINTMENT_SERVICE_URL=http://localhost:5004
-      - VITE_CLINICAL_SERVICE_URL=http://localhost:5001
-      - VITE_TRANSACTION_SERVICE_URL=http://localhost:3004
+      - VITE_USER_SERVICE_URL=http://localhost:3001/api
+      - VITE_APPOINTMENT_SERVICE_URL=http://localhost:5004/api
+      - VITE_CLINICAL_SERVICE_URL=http://localhost:5001/api
+      - VITE_TRANSACTION_SERVICE_URL=http://localhost:3004/api
     depends_on:
+      - user-identity-service
       - appointment-service
       - clinical-medical-service
       - transaction-notify-service

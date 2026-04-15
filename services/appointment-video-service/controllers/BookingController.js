@@ -29,7 +29,7 @@ exports.bookAppointment = async (req, res) => {
 // @desc    Get appointments
 exports.getAppointments = async (req, res) => {
   try {
-    const { userId, role } = req.query;
+    const { userId, role } = req.user;
     const filter = role === 'doctor' ? { doctorId: userId } : { patientId: userId };
     
     const appointments = await Appointment.find(filter).sort('-startTime');
