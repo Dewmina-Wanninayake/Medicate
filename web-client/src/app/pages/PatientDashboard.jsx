@@ -13,9 +13,14 @@ import {
   Pill,
   Activity
 } from 'lucide-react';
-import { authAPI, appointmentAPI, clinicalAPI } from '../services/api';
+import { useAuth } from '../context/AuthContext';
+import AdminTools from '../components/admin/AdminTools';
 
 export default function PatientDashboard() {
+  const { user } = useAuth();
+  const [activeMainTab, setActiveMainTab] = useState('health');
+  const isAdmin = user?.role === 'admin';
+
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [symptomText, setSymptomText] = useState('');
@@ -23,6 +28,7 @@ export default function PatientDashboard() {
   const [isAiLoading, setIsAiLoading] = useState(false);
 
   useEffect(() => {
+    // ... rest of useEffect
     // In a real scenario, this would filter by the logged-in user ID
     // For now, let's just attempt to fetch from appointmentAPI and fail gracefully
     const fetchAppointments = async () => {
@@ -72,8 +78,30 @@ export default function PatientDashboard() {
 
   return (
     <div className="space-y-8">
-      {/* Welcome & AI Section */}
-      <div className="grid lg:grid-cols-3 gap-8">
+      {/* Role-based Tab Switcher (Admin only) */}
+      {isAdmin && (
+        <div className="flex gap-4 border-b border-border pb-2">
+          <button 
+            onClick={() => setActiveMainTab('health')}
+            className={`pb-2 px-1 text-sm font-bold transition-all ${activeMainTab === 'health' ? 'border-b-4 border-primary text-primary' : 'text-muted-foreground'}`}
+          >
+            Patient Overview
+          </button>
+          <button 
+            onClick={() => setActiveMainTab('admin')}
+            className={`pb-2 px-1 text-sm font-bold transition-all ${activeMainTab === 'admin' ? 'border-b-4 border-primary text-primary' : 'text-muted-foreground'}`}
+          >
+            Admin Management
+          </button>
+        </div>
+      )}
+
+      {activeMainTab === 'admin' && isAdmin ? (
+        <AdminTools />
+      ) : (
+        <>
+          {/* Welcome & AI Section */}
+          <div className="grid lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-6">
           <Card className="rounded-[32px] border-none shadow-lg bg-gradient-to-br from-primary/10 to-accent/10">
             <CardContent className="p-8">
@@ -209,6 +237,8 @@ export default function PatientDashboard() {
           </div>
         </div>
       </div>
+        </>
+      )}
     </div>
   );
 }

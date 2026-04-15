@@ -7,25 +7,41 @@ import {
   Video, 
   DollarSign, 
   Settings,
-  Home
+  Home,
+  Clock,
+  FileText
 } from "lucide-react";
 
 import Sidebar from "../components/Sidebar";
 import Header from "../components/Header";
 
-const navigation = [
-  { name: 'Home', href: '/dashboard', icon: Home },
-  { name: 'Dashboard', href: '/dashboard/dashboard', icon: LayoutDashboard },
-  { name: 'Appointments', href: '/dashboard/appointments', icon: Calendar },
-  { name: 'Patient Records', href: '/dashboard/patients', icon: Users },
-  { name: 'Telemedicine', href: '/dashboard/telemedicine', icon: Video },
-  { name: 'Payments', href: '/dashboard/payments', icon: DollarSign },
-  { name: 'Settings', href: '/dashboard/settings', icon: Settings },
-];
+import { useAuth } from "../context/AuthContext";
 
 export default function MainLayout() {
+  const { user } = useAuth();
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
   const location = useLocation();
+
+  const patientNav = [
+    { name: 'Home', href: '/dashboard', icon: Home },
+    { name: 'Dashboard', href: '/dashboard/dashboard', icon: LayoutDashboard },
+    { name: 'Appointments', href: '/dashboard/appointments', icon: Calendar },
+    { name: 'Reports', href: '/dashboard/reports', icon: FileText },
+    { name: 'Payments', href: '/dashboard/payments', icon: DollarSign },
+    { name: 'Settings', href: '/dashboard/settings', icon: Settings },
+  ];
+
+  const doctorNav = [
+    { name: 'Overview', href: '/dashboard', icon: LayoutDashboard },
+    { name: 'Appointments', href: '/dashboard/doctor/appointments', icon: Calendar },
+    { name: 'Patient Records', href: '/dashboard/patients', icon: Users },
+    { name: 'Telemedicine', href: '/dashboard/telemedicine', icon: Video },
+    { name: 'Schedule', href: '/dashboard/doctor/schedule', icon: Clock },
+    { name: 'Messages', href: '/dashboard/doctor/messages', icon: Home },
+    { name: 'Profile', href: '/dashboard/doctor/profile', icon: Settings },
+  ];
+
+  const navigation = user?.role === 'doctor' ? doctorNav : patientNav;
 
   const toggleSidebar = () => setIsSidebarExpanded(!isSidebarExpanded);
 
