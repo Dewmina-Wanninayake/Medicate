@@ -20,6 +20,9 @@ spec:
         image: medicate-web-client:latest # Replace with your registry image
         ports:
         - containerPort: 80
+        envFrom:
+        - secretRef:
+            name: web-client-secrets
 ---
 apiVersion: v1
 kind: Service

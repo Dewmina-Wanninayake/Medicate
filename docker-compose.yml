@@ -1,6 +1,28 @@
-version: '3.8'
+version: '2.1'
 services:
-  # Appointment Video Service (MERN Stack Backend)
+
+  user-identity-service:
+    build:
+      context: ./services/user-identity-service
+      dockerfile: Dockerfile
+    container_name: medicate-user-identity
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=development
+      - PORT=3001
+      - MONGO_URI=mongodb://mongodb:27017/medicate_users
+      - JWT_SECRET=${JWT_SECRET:-your-super-secret-jwt-key-please-change-in-production}
+      - JWT_EXPIRES_IN=15m
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET:-your-super-secret-refresh-key-please-change-in-production}
+      - JWT_REFRESH_EXPIRES_IN=7d
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - medicate-network
+
   appointment-service:
     build:
       context: ./services/appointment-video-service
@@ -55,7 +77,7 @@ services:
       dockerfile: Dockerfile
     container_name: medicate-transaction-notify-service
     ports:
-      - "3004:3003"
+      - "3003:3003"
     environment:
       - PORT=3003
       - MONGODB_URI=mongodb://mongodb:27017/medicate_transactions
@@ -85,7 +107,7 @@ services:
     environment:
       - REACT_APP_APPOINTMENT_SERVICE_URL=http://localhost:5004
       - REACT_APP_CLINICAL_SERVICE_URL=http://localhost:5001
-      - REACT_APP_TRANSACTION_SERVICE_URL=http://localhost:3004
+      - REACT_APP_TRANSACTION_SERVICE_URL=http://localhost:3003
     depends_on:
       - appointment-service
       - clinical-medical-service
@@ -93,9 +115,8 @@ services:
     networks:
       - medicate-network
 
-  # Database Service
   mongodb:
-    image: mongo:latest
+    image: mongo:7
     container_name: medicate-mongodb
     ports:
       - "27017:27017"
@@ -110,12 +131,11 @@ services:
       retries: 5
       start_period: 15s
 
-  # Caching Service
   redis:
     image: redis:alpine
     container_name: medicate-redis
     ports:
-      - "6380:6379" # Accessible on host via 6380
+      - "6380:6379"
     networks:
       - medicate-network
     healthcheck:
