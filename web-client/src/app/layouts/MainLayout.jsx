@@ -14,13 +14,13 @@ import Sidebar from "../components/Sidebar";
 import Header from "../components/Header";
 
 const navigation = [
-  { name: 'Home', href: '/', icon: Home },
-  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { name: 'Appointments', href: '/appointments', icon: Calendar },
-  { name: 'Patient Records', href: '/patients', icon: Users },
-  { name: 'Telemedicine', href: '/telemedicine', icon: Video },
-  { name: 'Payments', href: '/payments', icon: DollarSign },
-  { name: 'Settings', href: '/settings', icon: Settings },
+  { name: 'Home', href: '/dashboard', icon: Home },
+  { name: 'Dashboard', href: '/dashboard/dashboard', icon: LayoutDashboard },
+  { name: 'Appointments', href: '/dashboard/appointments', icon: Calendar },
+  { name: 'Patient Records', href: '/dashboard/patients', icon: Users },
+  { name: 'Telemedicine', href: '/dashboard/telemedicine', icon: Video },
+  { name: 'Payments', href: '/dashboard/payments', icon: DollarSign },
+  { name: 'Settings', href: '/dashboard/settings', icon: Settings },
 ];
 
 export default function MainLayout() {

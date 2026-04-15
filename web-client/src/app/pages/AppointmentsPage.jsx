@@ -1,11 +1,28 @@
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { Input } from '../components/ui/input';
 import { Button } from '../components/ui/button';
 import { Calendar, Clock, Search, Filter } from 'lucide-react';
-import { mockAppointments } from '../data/mockData';
+import { appointmentAPI } from '../services/api';
 
 export default function AppointmentsPage() {
+  const [appointments, setAppointments] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchAppointments = async () => {
+      try {
+        const res = await appointmentAPI.list({});
+        setAppointments(res.data.appointments || []);
+      } catch (err) {
+        console.error("Failed to fetch appointments:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAppointments();
+  }, []);
   const getStatusColor = (status) => {
     switch (status) {
       case 'Live':
@@ -66,22 +83,26 @@ export default function AppointmentsPage() {
                 </tr>
               </thead>
               <tbody>
-                {mockAppointments.map((appointment) => (
+                {loading ? (
+                  <tr><td colSpan="6" className="text-center py-8">Loading appointments...</td></tr>
+                ) : appointments.length === 0 ? (
+                  <tr><td colSpan="6" className="text-center py-8">No appointments found.</td></tr>
+                ) : appointments.map((appointment) => (
                   <tr
-                    key={appointment.id}
+                    key={appointment.id || appointment._id}
                     className="border-b border-border hover:bg-muted/30 transition-colors"
                   >
                     <td className="py-4 px-4">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center font-semibold text-primary">
-                          {appointment.patientName.charAt(0)}
+                          {(appointment.patientName || 'P').charAt(0)}
                         </div>
                         <div>
                           <div className="font-semibold">
-                            {appointment.patientName}
+                            {appointment.patientName || 'Unknown Patient'}
                           </div>
                           <div className="text-sm text-muted-foreground">
-                            {appointment.patientAge} years
+                            {appointment.patientAge || 'N/A'}
                           </div>
                         </div>
                       </div>
@@ -90,7 +111,7 @@ export default function AppointmentsPage() {
                       <div className="flex flex-col gap-1">
                         <div className="flex items-center gap-2 text-sm">
                           <Calendar className="w-3 h-3" />
-                          {appointment.date}
+                          {new Date(appointment.date).toLocaleDateString() || appointment.date}
                         </div>
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                           <Clock className="w-3 h-3" />
@@ -100,11 +121,11 @@ export default function AppointmentsPage() {
                     </td>
                     <td className="py-4 px-4">
                       <Badge variant="secondary" className="rounded-full">
-                        {appointment.specialty}
+                        {appointment.specialty || 'General'}
                       </Badge>
                     </td>
                     <td className="py-4 px-4">
-                      {appointment.symptoms && (
+                      {appointment.symptoms && Array.isArray(appointment.symptoms) && (
                         <div className="flex flex-wrap gap-1 max-w-xs">
                           {appointment.symptoms.map((symptom, idx) => (
                             <Badge
@@ -120,7 +141,7 @@ export default function AppointmentsPage() {
                     </td>
                     <td className="py-4 px-4">
                       <Badge className={`rounded-full ${getStatusColor(appointment.status)}`}>
-                        {appointment.status}
+                        {appointment.status || 'Pending'}
                       </Badge>
                     </td>
                     <td className="py-4 px-4">

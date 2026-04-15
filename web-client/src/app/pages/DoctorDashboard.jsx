@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
@@ -12,13 +12,30 @@ import {
   Activity,
   Clock
 } from 'lucide-react';
-import { mockAppointments } from '../data/mockData';
+import { appointmentAPI, userAPI } from '../services/api';
 
 export default function DoctorDashboard() {
+  const [appointments, setAppointments] = useState([]);
+  const [statsData, setStatsData] = useState({ totalPatients: 0, totalAppointments: 0, revenue: 0 });
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const aptRes = await appointmentAPI.list({});
+        const apts = aptRes.data.appointments || [];
+        setAppointments(apts);
+        setStatsData(prev => ({ ...prev, totalAppointments: apts.length }));
+      } catch (err) {
+        console.error("Failed to fetch dashboard data:", err);
+      }
+    };
+    fetchData();
+  }, []);
+
   const stats = [
     {
       title: 'Total Appointments',
-      value: '142',
+      value: statsData.totalAppointments.toString(),
       change: '+12%',
       icon: Calendar,
       color: 'text-blue-600',
@@ -26,7 +43,7 @@ export default function DoctorDashboard() {
     },
     {
       title: 'Pending Consultations',
-      value: '8',
+      value: appointments.filter(a => a.status === 'Pending').length.toString(),
       change: '+3',
       icon: Clock,
       color: 'text-orange-600',
@@ -34,7 +51,7 @@ export default function DoctorDashboard() {
     },
     {
       title: 'Total Patients',
-      value: '1,248',
+      value: '1,248', // Replace with real stats if available
       change: '+8%',
       icon: Users,
       color: 'text-green-600',
@@ -42,7 +59,7 @@ export default function DoctorDashboard() {
     },
     {
       title: 'Revenue',
-      value: '$12,450',
+      value: '$12,450', // Replace with real logic
       change: '+15%',
       icon: DollarSign,
       color: 'text-primary',
@@ -50,7 +67,7 @@ export default function DoctorDashboard() {
     }
   ];
 
-  const todayAppointments = mockAppointments.filter(
+  const todayAppointments = appointments.filter(
     apt => apt.status === 'Live' || apt.status === 'Scheduled'
   );
 
