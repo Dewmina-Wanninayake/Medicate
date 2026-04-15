@@ -15,11 +15,16 @@ export default function LandingPage() {
   const [selectedDoctor, setSelectedDoctor] = useState(null);
   const [aiResults, setAiResults] = useState(null);
 
-  const handleSymptomCheck = () => {
+  const handleSymptomCheck = async () => {
     if (symptomText.trim()) {
-      setAiResults(
-        `Based on your symptoms: "${symptomText}", our AI suggests consulting with a Cardiologist or General Practitioner. Common causes include stress, anxiety, or cardiac concerns. Please book an appointment for proper diagnosis.`
-      );
+      setAiResults("Analyzing symptoms...");
+      try {
+        const { clinicalAPI } = await import('../services/api');
+        const res = await clinicalAPI.aiSymptomCheck({ symptoms: symptomText });
+        setAiResults(res.data.data.analysis || "Our AI could not reach a conclusion. Please consult a doctor.");
+      } catch (err) {
+        setAiResults("AI Analysis currently unavailable. Please consult your primary care doctor directly.");
+      }
     }
   };
 

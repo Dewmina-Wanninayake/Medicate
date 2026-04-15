@@ -1,4 +1,4 @@
-version: '2.1'
+version: '3.8'
 services:
 
   user-identity-service:
@@ -77,7 +77,7 @@ services:
       dockerfile: Dockerfile
     container_name: medicate-transaction-notify-service
     ports:
-      - "3003:3003"
+      - "3004:3003"
     environment:
       - PORT=3003
       - MONGODB_URI=mongodb://mongodb:27017/medicate_transactions
@@ -105,9 +105,9 @@ services:
     ports:
       - "3000:80"
     environment:
-      - REACT_APP_APPOINTMENT_SERVICE_URL=http://localhost:5004
-      - REACT_APP_CLINICAL_SERVICE_URL=http://localhost:5001
-      - REACT_APP_TRANSACTION_SERVICE_URL=http://localhost:3003
+      - VITE_APPOINTMENT_SERVICE_URL=http://localhost:5004
+      - VITE_CLINICAL_SERVICE_URL=http://localhost:5001
+      - VITE_TRANSACTION_SERVICE_URL=http://localhost:3004
     depends_on:
       - appointment-service
       - clinical-medical-service
