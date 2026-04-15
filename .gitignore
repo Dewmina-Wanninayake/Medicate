@@ -9,3 +9,5 @@ config.local.*
 *-secret.yaml
 *-secrets.yaml
 
+# Kubernetes manifests
+k8s/
