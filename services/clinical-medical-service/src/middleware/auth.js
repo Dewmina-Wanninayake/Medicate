@@ -10,12 +10,17 @@ const protect = (req, res, next) => {
       return res.status(401).json({ success: false, message: 'No token provided. Please login first.' });
     }
 
-    const token = authHeader.split(' ')[1]; // Extract token from "Bearer <token>"
+    const token = authHeader.split(' ')[1];
+    const JWT_ISSUER  = process.env.JWT_ISSUER  || 'medicate-user-identity-service';
+    const JWT_AUDIENCE = process.env.JWT_AUDIENCE || 'medicate-platform';
 
-    // Verify token using shared secret — throws if invalid or expired
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET, {
+      issuer: JWT_ISSUER,
+      audience: JWT_AUDIENCE
+    });
 
-    req.user = decoded; // Attach user info { userId, role, name } to request
+    req.user = decoded;
+    if (!req.user.userId && req.user.id) req.user.userId = req.user.id;
     next();
 
   } catch (error) {
