@@ -1,4 +1,4 @@
-import { createBrowserRouter } from "react-router";
+import { createBrowserRouter, Navigate } from "react-router";
 import LandingPage from "./pages/LandingPage";
 import DoctorDashboard from "./pages/DoctorDashboard";
 import AppointmentsPage from "./pages/AppointmentsPage";
@@ -12,9 +12,14 @@ import MainLayout from "./layouts/MainLayout";
 import PaymentsPage from "./pages/PaymentsPage";
 import SettingsPage from "./pages/SettingsPage";
 import TelemedicineHubPage from "./pages/TelemedicineHubPage";
+import DashboardRouter from "./pages/DashboardRouter";
 import { ProtectedRoute, RoleRoute } from "./components/ProtectedRoute";
 
 export const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <Navigate to="/dashboard" replace />,
+  },
   {
     path: "/login",
     Component: LoginPage,
@@ -52,12 +57,12 @@ export const router = createBrowserRouter([
     ),
     children: [
       {
-        path: "/",
+        index: true,
         Component: LandingPage,
       },
       {
         path: "dashboard",
-        Component: DoctorDashboard,
+        Component: DashboardRouter,
       },
       {
         path: "appointments",
