@@ -20,36 +20,6 @@ spec:
           ports:
             - containerPort: 5000
 
-          env:
-            - name: PORT
-              value: "5000"
-
-            - name: MONGO_URI
-              valueFrom:
-                secretKeyRef:
-                  name: medicate-secrets
-                  key: MONGO_URI
-
-            - name: OPENAI_API_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: medicate-secrets
-                  key: OPENAI_API_KEY
-
-            - name: CLOUDINARY_CLOUD_NAME
-              valueFrom:
-                configMapKeyRef:
-                  name: medicate-config
-                  key: CLOUDINARY_CLOUD_NAME
-
-            - name: CLOUDINARY_API_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: medicate-secrets
-                  key: CLOUDINARY_API_KEY
-
-            - name: CLOUDINARY_API_SECRET
-              valueFrom:
-                secretKeyRef:
-                  name: medicate-secrets
-                  key: CLOUDINARY_API_SECRET
+          envFrom:
+          - secretRef:
+              name: clinical-medical-service-secrets
