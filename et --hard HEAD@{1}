@@ -1,0 +1,16 @@
+[33m56fd407[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mclinical-medical-service[m[33m, [m[1;31morigin/Working[m[33m)[m HEAD@{0}: pull origin Working: Fast-forward
+[33m4348617[m HEAD@{1}: pull origin Working: Fast-forward
+[33m82638a2[m[33m ([m[1;31morigin/clinical-medical-service[m[33m, [m[1;32mWorking[m[33m)[m HEAD@{2}: checkout: moving from Working to clinical-medical-service
+[33m82638a2[m[33m ([m[1;31morigin/clinical-medical-service[m[33m, [m[1;32mWorking[m[33m)[m HEAD@{3}: merge clinical-medical-service: Fast-forward
+[33me57b80d[m HEAD@{4}: checkout: moving from clinical-medical-service to Working
+[33m82638a2[m[33m ([m[1;31morigin/clinical-medical-service[m[33m, [m[1;32mWorking[m[33m)[m HEAD@{5}: commit: feat(clinical): add docker and kubernetes configurations
+[33m19bcbbc[m HEAD@{6}: commit: feat(clinical): add docker and kubernetes configurations
+[33m555ebd8[m HEAD@{7}: reset: moving to ORIG_HEAD
+[33m555ebd8[m HEAD@{8}: commit (merge): Merge branch 'Working' of https://github.com/Dewmina-Wanninayake/Medicate into clinical-medical-service
+[33m318484f[m HEAD@{9}: commit: Implement backend files
+[33md72c9c9[m HEAD@{10}: commit (merge): resolve merge conflict in package-lock.json
+[33m5ae9dff[m HEAD@{11}: commit: install mongoose
+[33mbd7e572[m HEAD@{12}: commit: package-lock.jason file input
+[33me57b80d[m HEAD@{13}: checkout: moving from Working to clinical-medical-service
+[33me57b80d[m HEAD@{14}: checkout: moving from main to Working
+[33m9963a3d[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m HEAD@{15}: clone: from https://github.com/Dewmina-Wanninayake/Medicate.git
