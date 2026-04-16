@@ -105,6 +105,8 @@ services:
     build:
       context: ./web-client
       dockerfile: Dockerfile
+      args:
+        - VITE_STRIPE_PUBLISHABLE_KEY=${VITE_STRIPE_PUBLISHABLE_KEY:-pk_test_51TLgDjBa2adBv6PvdnXC4151Hwd9x8b25ulEGgr4M3OdtdA7Ph5riRA4o2xHkeoeIwClkrFbEHdZsuVAL0nXIg4c00BhWr6NlE}
     container_name: medicate-web-client
     ports:
       - "3000:80"

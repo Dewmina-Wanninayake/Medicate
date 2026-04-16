@@ -1,8 +1,8 @@
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements } from '@stripe/react-stripe-js';
 
-// Use environment variable or fallback to test key
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || 'pk_test_51TLgDjBa2adBv6PvdnXC4151Hwd9x8b25ulEGgr4M3OdtdA7Ph5riRA4o2xHkeoeIwClkrFbEHdZsuVAL0nXIg4c00BhWr6NlE');
+// Use environment variable for test key
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 
 export default function StripePaymentWrapper({ children, clientSecret }) {
   if (!clientSecret) return null;
