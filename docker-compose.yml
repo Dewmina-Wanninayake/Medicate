@@ -38,6 +38,7 @@ services:
       - REDIS_PASSWORD=
       - AGORA_APP_ID=e7f6e9aeecf14b2ba10e3f40be9f56e7
       - AGORA_APP_CERTIFICATE=fb90ec88697e43a489af7be085b3ea59
+      - JWT_SECRET=${JWT_SECRET:-your-super-secret-jwt-key-please-change-in-production}
     restart: on-failure
     depends_on:
       mongodb:
@@ -82,13 +83,16 @@ services:
       - PORT=3003
       - MONGODB_URI=mongodb://mongodb:27017/medicate_transactions
       - NODE_ENV=production
-      - STRIPE_API_KEY=${STRIPE_API_KEY:-sk_test_placeholder}
-      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET:-whsec_placeholder}
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY:-${STRIPE_SECRET_KEY}}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET:-whsec_4625c7b7f0a43f5151dc72f31dd44ee713db51c6edac99392a10784fd5601b11}
       - NODEMAILER_EMAIL=${NODEMAILER_EMAIL:-noreply@medicate.com}
       - NODEMAILER_PASSWORD=${NODEMAILER_PASSWORD:-}
       - TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID:-}
       - TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN:-}
       - TWILIO_PHONE_NUMBER=${TWILIO_PHONE_NUMBER:-}
+      - JWT_SECRET=${JWT_SECRET:-your-super-secret-jwt-key-please-change-in-production}
+      - JWT_ISSUER=medicate-user-identity-service
+      - JWT_AUDIENCE=medicate-platform
     restart: on-failure
     depends_on:
       mongodb:
@@ -105,9 +109,11 @@ services:
     ports:
       - "3000:80"
     environment:
-      - VITE_APPOINTMENT_SERVICE_URL=http://localhost:5004
-      - VITE_CLINICAL_SERVICE_URL=http://localhost:5001
-      - VITE_TRANSACTION_SERVICE_URL=http://localhost:3004
+      - VITE_USER_SERVICE_URL=http://localhost:3001/api
+      - VITE_APPOINTMENT_SERVICE_URL=http://localhost:5004/api
+      - VITE_CLINICAL_SERVICE_URL=http://localhost:5001/api
+      - VITE_TRANSACTION_SERVICE_URL=http://localhost:3004/api
+      - VITE_STRIPE_PUBLISHABLE_KEY=pk_test_51TLgDjBa2adBv6PvdnXC4151Hwd9x8b25ulEGgr4M3OdtdA7Ph5riRA4o2xHkeoeIwClkrFbEHdZsuVAL0nXIg4c00BhWr6NlE
     depends_on:
       - appointment-service
       - clinical-medical-service

@@ -35,11 +35,10 @@ router.post(
     console.log(`[Stripe Webhook] Event: ${event.type} — ID: ${event.id}`);
 
     try {
-      switch (event.type) {
-
-        // ── Payment succeeded ──────────────────────────────────────────────
+      switch (event.type) {        // ── Payment succeeded ──────────────────────────────────────────────
         case 'payment_intent.succeeded': {
           const intent = event.data.object;
+          const meta = intent.metadata || {};
 
           const tx = await Transaction.findOneAndUpdate(
             { gatewayTransactionId: intent.id },
@@ -49,67 +48,78 @@ router.post(
 
           if (!tx) break;
 
-          const meta = intent.metadata || {};
+          // Notify Appointment Service if this was a booking
+          if (meta.appointmentId) {
+            try {
+              // Internal Docker network call to appointment-service
+              await fetch('http://appointment-service:5003/api/appointments/status-update', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ appointmentId: meta.appointmentId, status: 'scheduled' })
+              });
+              console.log(`[Webhook] Notified appointment service for ${meta.appointmentId}`);
+            } catch (e) {
+              console.error('[Webhook] Appointment service callback failed:', e.message);
+            }
+          }
+
           const notifData = {
             patientName:   meta.patientName || 'Patient',
             amount:        intent.amount,
             currency:      intent.currency.toUpperCase(),
             transactionId: tx.transactionId,
-            doctorName:    meta.doctorName || '',
+            doctorName:    meta.doctorName || 'Doctor',
+            appointmentDate: meta.appointmentDate || '',
+            appointmentTime: meta.appointmentTime || '',
           };
 
-          // Send email receipt
+          // Decide which notification type to send
+          const notificationType = meta.appointmentId ? 'appointment_confirmation' : 'payment_success';
+
+          // Send email 
           if (meta.patientEmail) {
             try {
               const result = await emailService.sendEmail({
                 to:   meta.patientEmail,
-                type: 'payment_success',
+                type: notificationType,
                 data: notifData,
               });
               await Notification.create({
                 recipientId:          meta.patientId || tx.patientId,
                 recipientRole:        'patient',
                 channel:              'email',
-                type:                 'payment_success',
-                subject:              'Payment Confirmed — Medicate',
-                body:                 'Payment receipt sent',
+                type:                 notificationType,
+                subject:              notificationType === 'appointment_confirmation' ? 'Appointment Confirmed — Medicate' : 'Payment Confirmed — Medicate',
+                body:                 notificationType === 'appointment_confirmation' ? 'Appointment details sent' : 'Payment receipt sent',
                 status:               'sent',
                 providerMessageId:    result.messageId,
                 sentAt:               new Date(),
                 relatedTransactionId: tx.transactionId,
               });
-              await Transaction.findOneAndUpdate(
-                { transactionId: tx.transactionId },
-                { receiptEmailSent: true }
-              );
             } catch (e) {
               console.error('[Webhook] Email failed:', e.message);
             }
           }
 
-          // Send SMS receipt
+          // Send SMS 
           if (meta.patientPhone) {
             try {
               const result = await smsService.sendSms({
                 to:   meta.patientPhone,
-                type: 'payment_success',
+                type: notificationType,
                 data: notifData,
               });
               await Notification.create({
                 recipientId:          meta.patientId || tx.patientId,
                 recipientRole:        'patient',
                 channel:              'sms',
-                type:                 'payment_success',
-                body:                 'Payment SMS sent',
+                type:                 notificationType,
+                body:                 notificationType === 'appointment_confirmation' ? 'Appointment SMS sent' : 'Payment SMS sent',
                 status:               'sent',
                 providerMessageId:    result.sid,
                 sentAt:               new Date(),
                 relatedTransactionId: tx.transactionId,
               });
-              await Transaction.findOneAndUpdate(
-                { transactionId: tx.transactionId },
-                { receiptSmsSent: true }
-              );
             } catch (e) {
               console.error('[Webhook] SMS failed:', e.message);
             }
