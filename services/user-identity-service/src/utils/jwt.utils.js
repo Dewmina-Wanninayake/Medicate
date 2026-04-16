@@ -6,16 +6,16 @@ const jwt = require('jsonwebtoken');
 const generateAccessToken = (user) => {
   return jwt.sign(
     { 
-      userId: user._id, 
+      id: user._id, 
       role: user.role, 
       email: user.email,
-      name: `${user.firstName} ${user.lastName}`
+      name: `${user.firstName} ${user.lastName}`.trim()
     },
     process.env.JWT_SECRET,
     { 
       expiresIn: process.env.JWT_EXPIRES_IN || '15m',
-      issuer:    process.env.JWT_ISSUER   || 'medicate-user-identity-service',
-      audience:  process.env.JWT_AUDIENCE || 'medicate-platform'
+      issuer:    'medicate-user-identity-service',
+      audience:  'medicate-platform'
     }
   );
 };

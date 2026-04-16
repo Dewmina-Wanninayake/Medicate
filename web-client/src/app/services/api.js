@@ -117,14 +117,15 @@ export const notificationAPI = {
 
 // ── Appointment endpoints (appointment-video-service) ────────────
 export const appointmentAPI = {
-  book:               (data) => appointmentApi.post('/appointments/book', data),
+  book:               (data)   => appointmentApi.post('/appointments/book', data),
   list:               (params) => appointmentApi.get('/appointments', { params }),
-  cancel:             (id)   => appointmentApi.delete(`/appointments/${id}`),
-  generateRoom:       (data) => appointmentApi.post('/consultations/generate-room', data),
-  getSessionStatus:   (id)   => appointmentApi.get(`/consultations/status/${id}`),
-  sendMessage:        (data) => appointmentApi.post('/consultations/messages', data),
-  getMessages:        (id)   => appointmentApi.get(`/consultations/messages/${id}`),
-  updateNotes:        (data) => appointmentApi.patch('/consultations/update-notes', data),
+  cancel:             (id)     => appointmentApi.delete(`/appointments/${id}`),
+  updateStatus:       (data)   => appointmentApi.post('/appointments/status-update', data),
+  generateRoom:       (data)   => appointmentApi.post('/consultations/generate-room', data),
+  getSessionStatus:   (id)     => appointmentApi.get(`/consultations/status/${id}`),
+  sendMessage:        (data)   => appointmentApi.post('/consultations/messages', data),
+  getMessages:        (id)     => appointmentApi.get(`/consultations/messages/${id}`),
+  updateNotes:        (data)   => appointmentApi.patch('/consultations/update-notes', data),
 };
 
 // ── Clinical endpoints (clinical-medical-service) ────────────────

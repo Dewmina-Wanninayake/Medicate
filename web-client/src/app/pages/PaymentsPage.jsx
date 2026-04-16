@@ -1,265 +1,273 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
+import { jsPDF } from 'jspdf';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
-import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
-import {
-  CreditCard, Search, Download, Calendar, DollarSign, AlertCircle,
-  RefreshCw, Clock, CheckCircle2, XCircle, ChevronDown, ChevronUp
+import { Badge } from '../components/ui/badge';
+import { 
+  CreditCard, 
+  Search, 
+  Filter, 
+  Download, 
+  ChevronRight,
+  TrendingUp,
+  Clock,
+  CheckCircle,
+  AlertCircle,
+  ArrowUpRight,
+  FileText
 } from 'lucide-react';
 import { paymentAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
-const STATUS_STYLES = {
-  completed: { cls: 'bg-green-100 text-green-700 border-green-200', icon: CheckCircle2 },
-  succeeded: { cls: 'bg-green-100 text-green-700 border-green-200', icon: CheckCircle2 },
-  pending:   { cls: 'bg-yellow-100 text-yellow-700 border-yellow-200', icon: Clock },
-  failed:    { cls: 'bg-red-100 text-red-700 border-red-200', icon: XCircle },
-  refunded:  { cls: 'bg-gray-100 text-gray-600 border-gray-200', icon: XCircle },
-};
-
 export default function PaymentsPage() {
   const { user } = useAuth();
-
+  const [searchTerm, setSearchTerm] = useState('');
   const [transactions, setTransactions] = useState([]);
-  const [loading, setLoading]           = useState(true);
-  const [error, setError]               = useState('');
-  const [search, setSearch]             = useState('');
-  const [expanded, setExpanded]         = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // ── Fetch transactions ────────────────────────────────────────────
-  const fetchTransactions = useCallback(async () => {
-    setLoading(true);
-    setError('');
-    try {
-      const res = await paymentAPI.myTransactions();
-      setTransactions(res.data.data || res.data.transactions || []);
-    } catch (err) {
-      console.error('Transactions fetch failed:', err);
-      setError('Could not load payment history. The payment service may be offline.');
-      setTransactions([]);
-    } finally {
-      setLoading(false);
-    }
+  useEffect(() => {
+    const fetchTransactions = async () => {
+      try {
+        setLoading(true);
+        const response = await paymentAPI.myTransactions();
+        setTransactions(response.data.data || []);
+      } catch (err) {
+        console.error('Failed to fetch transactions:', err);
+        setError('Could not load transaction history.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTransactions();
   }, []);
 
-  useEffect(() => { fetchTransactions(); }, [fetchTransactions]);
-
-  // ── Filtered ──────────────────────────────────────────────────────
-  const filtered = transactions.filter(t =>
-    (t.description || t.appointmentId || t._id || '')
-      .toLowerCase()
-      .includes(search.toLowerCase())
+  const filteredTransactions = transactions.filter(tx => 
+    tx.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    tx.transactionId?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // ── Summary stats ─────────────────────────────────────────────────
   const totalSpent = transactions
-    .filter(t => ['completed','succeeded'].includes((t.status || '').toLowerCase()))
-    .reduce((sum, t) => sum + (t.amount || 0), 0);
+    .filter(tx => tx.status === 'succeeded')
+    .reduce((acc, tx) => acc + (tx.amount / 100), 0);
 
-  const pending = transactions.filter(t => (t.status || '').toLowerCase() === 'pending').length;
+  const pendingAmount = transactions
+    .filter(tx => tx.status === 'pending')
+    .reduce((acc, tx) => acc + (tx.amount / 100), 0);
 
-  // ── Receipt print ─────────────────────────────────────────────────
-  const printReceipt = (t) => {
-    const content = `
-      <html><body style="font-family:sans-serif;padding:32px;max-width:560px;margin:auto">
-        <h2 style="color:#333">Payment Receipt</h2><hr/>
-        <p><b>Transaction ID:</b> ${t._id || t.id}</p>
-        <p><b>Date:</b> ${new Date(t.createdAt || t.date).toLocaleString()}</p>
-        <p><b>Amount:</b> $${((t.amount || 0) / 100).toFixed(2)}</p>
-        <p><b>Status:</b> ${t.status}</p>
-        ${t.description ? `<p><b>Description:</b> ${t.description}</p>` : ''}
-        ${t.appointmentId ? `<p><b>Appointment ID:</b> ${t.appointmentId}</p>` : ''}
-      </body></html>
-    `;
-    const w = window.open('', '_blank');
-    w.document.write(content);
-    w.document.close();
-    w.print();
+  const handleDownload = (tx) => {
+    const doc = new jsPDF();
+    
+    // Header
+    doc.setFontSize(24);
+    doc.setTextColor(59, 130, 246); // Primary Color
+    doc.text('MEDICATE', 105, 30, { align: 'center' });
+    
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+    doc.text('Healthcare Platform - Official Receipt', 105, 38, { align: 'center' });
+    
+    doc.setDrawColor(200);
+    doc.line(20, 45, 190, 45);
+    
+    // Details
+    doc.setFontSize(12);
+    doc.setTextColor(0);
+    doc.setFont('helvetica', 'bold');
+    doc.text('TRANSACTION DETAILS', 20, 60);
+    
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Transaction ID:`, 20, 75);
+    doc.text(tx.transactionId, 70, 75);
+    
+    doc.text(`Date:`, 20, 85);
+    doc.text(new Date(tx.createdAt).toLocaleString(), 70, 85);
+    
+    doc.text(`Service:`, 20, 95);
+    doc.text(tx.description || 'Consultation', 70, 95);
+    
+    doc.text(`Status:`, 20, 105);
+    if (tx.status === 'succeeded') doc.setTextColor(22, 163, 74);
+    else doc.setTextColor(220, 38, 38);
+    doc.text(tx.status.toUpperCase(), 70, 105);
+    
+    // Price
+    doc.setTextColor(0);
+    doc.line(20, 115, 190, 115);
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`TOTAL AMOUNT:`, 20, 130);
+    doc.text(`$${(tx.amount / 100).toFixed(2)} ${tx.currency.toUpperCase()}`, 190, 130, { align: 'right' });
+    
+    // Footer
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(150);
+    doc.text('This is a computer-generated receipt. No signature required.', 105, 270, { align: 'center' });
+    doc.text('Thank you for choosing Medicate.', 105, 275, { align: 'center' });
+
+    // Robust download logic
+    try {
+      const blob = doc.output('blob');
+      const fileName = `Receipt_${tx.transactionId.substring(0, 8)}.pdf`;
+      
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setTimeout(() => URL.revokeObjectURL(url), 100);
+    } catch (err) {
+      console.error('PDF Save error:', err);
+      doc.save(`Receipt_${tx.transactionId.substring(0, 8)}.pdf`); 
+    }
   };
 
-  const getStatusStyle = (status) =>
-    STATUS_STYLES[(status || '').toLowerCase()] || STATUS_STYLES.pending;
-
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      {/* Header */}
-      <div>
-        <h1 className="text-4xl font-black tracking-tight text-primary">Payments & Billing</h1>
-        <p className="text-muted-foreground mt-2">
-          Your complete payment history and billing records for all consultations.
-        </p>
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-4xl font-black tracking-tight text-primary">Payments & Billing</h1>
+          <p className="text-muted-foreground mt-2 text-lg">
+            Manage your consultation payments, invoices, and billing history.
+          </p>
+        </div>
+        <Button className="rounded-full bg-primary hover:bg-accent h-14 px-8 text-lg font-bold shadow-lg shadow-primary/20 gap-3 group">
+          <CreditCard className="w-5 h-5 group-hover:rotate-12 transition-transform" /> 
+          Add Payment Method
+        </Button>
       </div>
 
-      {/* Summary cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="rounded-[32px] border-none shadow-md bg-gradient-to-br from-primary/10 to-accent/10">
-          <CardContent className="p-6 flex items-center gap-5">
-            <div className="w-14 h-14 rounded-2xl bg-primary/20 flex items-center justify-center">
-              <DollarSign className="w-7 h-7 text-primary" />
-            </div>
-            <div>
-              <div className="text-3xl font-black text-primary">
-                ${(totalSpent / 100).toFixed(2)}
-              </div>
-              <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Total Spent</div>
-            </div>
-          </CardContent>
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card className="rounded-[32px] border-none shadow-md bg-white/50 backdrop-blur-sm p-6 flex items-center gap-6">
+           <div className="w-16 h-16 rounded-3xl bg-primary/10 flex items-center justify-center text-primary">
+              <TrendingUp className="w-8 h-8" />
+           </div>
+           <div>
+              <div className="text-3xl font-black text-primary">${totalSpent.toFixed(2)}</div>
+              <div className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Total Spent</div>
+           </div>
         </Card>
-
-        <Card className="rounded-[32px] border-none shadow-md">
-          <CardContent className="p-6 flex items-center gap-5">
-            <div className="w-14 h-14 rounded-2xl bg-blue-50 flex items-center justify-center">
-              <CreditCard className="w-7 h-7 text-blue-600" />
-            </div>
-            <div>
-              <div className="text-3xl font-black text-blue-600">{transactions.length}</div>
-              <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Total Transactions</div>
-            </div>
-          </CardContent>
+        <Card className="rounded-[32px] border-none shadow-md bg-white/50 backdrop-blur-sm p-6 flex items-center gap-6">
+           <div className="w-16 h-16 rounded-3xl bg-yellow-400/10 flex items-center justify-center text-yellow-600">
+              <Clock className="w-8 h-8" />
+           </div>
+           <div>
+              <div className="text-3xl font-black text-yellow-600">${pendingAmount.toFixed(2)}</div>
+              <div className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Pending Bills</div>
+           </div>
         </Card>
-
-        <Card className="rounded-[32px] border-none shadow-md">
-          <CardContent className="p-6 flex items-center gap-5">
-            <div className="w-14 h-14 rounded-2xl bg-yellow-50 flex items-center justify-center">
-              <Clock className="w-7 h-7 text-yellow-600" />
-            </div>
-            <div>
-              <div className="text-3xl font-black text-yellow-600">{pending}</div>
-              <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Pending</div>
-            </div>
-          </CardContent>
+        <Card className="rounded-[32px] border-none shadow-md bg-white/50 backdrop-blur-sm p-6 flex items-center gap-6">
+           <div className="w-16 h-16 rounded-3xl bg-green-500/10 flex items-center justify-center text-green-600">
+              <CheckCircle className="w-8 h-8" />
+           </div>
+           <div>
+              <div className="text-3xl font-black text-green-600">{transactions.length}</div>
+              <div className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Transactions</div>
+           </div>
         </Card>
       </div>
 
-      {/* Error */}
-      {error && (
-        <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-2xl text-red-700 text-sm">
-          <AlertCircle className="w-5 h-5 shrink-0" />
-          <span>{error}</span>
-          <Button variant="ghost" size="sm" className="ml-auto" onClick={fetchTransactions}>
-            <RefreshCw className="w-4 h-4 mr-1" /> Retry
+      {/* Search and History */}
+      <div className="space-y-6">
+        <div className="flex gap-4">
+          <div className="relative flex-1 group">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
+            <Input 
+              placeholder="Search by description or transaction ID..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-12 h-16 rounded-full bg-white border-none shadow-sm focus-visible:ring-2 focus-visible:ring-primary/50 transition-all text-lg"
+            />
+          </div>
+          <Button variant="outline" className="h-16 w-16 rounded-full border-none bg-white shadow-sm hover:bg-muted">
+            <Filter className="w-6 h-6" />
           </Button>
         </div>
-      )}
 
-      {/* Search */}
-      <div className="relative">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input
-          placeholder="Search transactions by ID or description…"
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          className="pl-11 h-12 rounded-full bg-card border-none shadow-sm"
-        />
-      </div>
+        {error && (
+          <div className="p-8 text-center bg-red-50 rounded-[40px] border border-red-100">
+            <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+            <h3 className="text-xl font-bold text-red-600">{error}</h3>
+            <Button variant="link" onClick={() => window.location.reload()} className="text-red-500 underline">Try Again</Button>
+          </div>
+        )}
 
-      {/* Transactions */}
-      <Card className="rounded-[40px] border-none shadow-xl overflow-hidden">
-        <CardHeader className="bg-muted/30 px-8 py-6">
-          <CardTitle className="flex items-center justify-between">
-            <span>Transaction History</span>
-            <Badge variant="secondary" className="rounded-full">{filtered.length}</Badge>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
+        <div className="grid gap-4">
           {loading ? (
-            <div className="py-24 text-center">
-              <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-              <p className="text-muted-foreground">Loading transactions…</p>
-            </div>
-          ) : filtered.length === 0 ? (
-            <div className="py-24 text-center">
-              <CreditCard className="w-16 h-16 mx-auto mb-4 text-muted-foreground/20" />
-              <h3 className="text-xl font-bold text-muted-foreground/50 mb-2">No transactions found</h3>
-              <p className="text-sm text-muted-foreground">
-                {search ? 'Try adjusting your search.' : 'Your payment history will appear here after your first appointment.'}
-              </p>
-            </div>
-          ) : (
-            <div className="divide-y divide-border/30">
-              {filtered.map(t => {
-                const id = t._id || t.id;
-                const isExpanded = expanded === id;
-                const { cls, icon: StatusIcon } = getStatusStyle(t.status);
-
-                return (
-                  <div key={id}>
-                    <div
-                      className="flex flex-col sm:flex-row sm:items-center gap-4 px-8 py-6 hover:bg-muted/10 transition-colors cursor-pointer group"
-                      onClick={() => setExpanded(isExpanded ? null : id)}
-                    >
-                      <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shrink-0 group-hover:bg-primary group-hover:text-white transition-all">
-                        <CreditCard className="w-6 h-6" />
-                      </div>
-
-                      <div className="flex-1 min-w-0">
-                        <div className="font-bold text-base">
-                          {t.description || `Appointment Consultation`}
-                        </div>
-                        <div className="text-sm text-muted-foreground flex flex-wrap gap-3 mt-1">
-                          <span className="flex items-center gap-1.5">
-                            <Calendar className="w-3.5 h-3.5" />
-                            {new Date(t.createdAt || t.date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
-                          </span>
-                          <span className="font-mono text-xs opacity-60">#{(id || '').slice(-8).toUpperCase()}</span>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-3 shrink-0">
-                        <div className="text-right">
-                          <div className="text-xl font-black text-primary">
-                            ${((t.amount || 0) / 100).toFixed(2)}
-                          </div>
-                          <div className="text-xs text-muted-foreground">{t.currency?.toUpperCase() || 'USD'}</div>
-                        </div>
-                        <Badge className={`rounded-full px-3 py-1 text-xs font-bold border capitalize flex items-center gap-1.5 ${cls}`}>
-                          <StatusIcon className="w-3 h-3" />
-                          {t.status || 'Unknown'}
-                        </Badge>
-                        <Button variant="ghost" size="icon" className="rounded-full">
-                          {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                        </Button>
-                      </div>
-                    </div>
-
-                    {isExpanded && (
-                      <div className="px-8 pb-6 bg-muted/10 border-t border-border/30 pt-4">
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm mb-4">
-                          <div>
-                            <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Transaction ID</div>
-                            <div className="font-mono text-xs">{id}</div>
-                          </div>
-                          {t.appointmentId && (
-                            <div>
-                              <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Appointment ID</div>
-                              <div className="font-mono text-xs">{t.appointmentId}</div>
-                            </div>
-                          )}
-                          {t.paymentMethod && (
-                            <div>
-                              <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Payment Method</div>
-                              <div className="capitalize">{t.paymentMethod}</div>
-                            </div>
-                          )}
-                        </div>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="rounded-full gap-2"
-                          onClick={(e) => { e.stopPropagation(); printReceipt(t); }}
-                        >
-                          <Download className="w-4 h-4" /> Download Receipt
-                        </Button>
-                      </div>
-                    )}
+            [1, 2, 3].map(i => (
+              <div key={i} className="h-24 rounded-[40px] bg-white animate-pulse shadow-sm"></div>
+            ))
+          ) : filteredTransactions.map((tx) => (
+            <Card key={tx._id} className="rounded-[40px] border-none shadow-lg hover:shadow-2xl transition-all duration-300 group overflow-hidden bg-white">
+              <div className="p-2 flex flex-col md:flex-row md:items-center gap-6">
+                <div className="p-6 md:p-8 flex-1 flex items-center gap-8">
+                  <div className={`w-16 h-16 rounded-3xl flex items-center justify-center transition-all duration-300 ${
+                    tx.status === 'succeeded' ? 'bg-green-500/10 text-green-600' :
+                    tx.status === 'pending' ? 'bg-yellow-400/10 text-yellow-600' :
+                    'bg-red-500/10 text-red-600'
+                  }`}>
+                    {tx.status === 'succeeded' ? <CheckCircle className="w-8 h-8" /> : 
+                     tx.status === 'pending' ? <Clock className="w-8 h-8" /> : 
+                     <AlertCircle className="w-8 h-8" />}
                   </div>
-                );
-              })}
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-3 mb-1">
+                       <h3 className="text-xl font-black tracking-tight truncate">{tx.description || 'Specialist Consultation'}</h3>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-6 text-sm font-medium text-muted-foreground">
+                       <span className="flex items-center gap-2">
+                          <FileText className="w-4 h-4" />
+                          {tx.transactionId}
+                       </span>
+                       <span className="flex items-center gap-2">
+                          <Clock className="w-4 h-4" />
+                          {new Date(tx.createdAt).toLocaleDateString(undefined, { dateStyle: 'long' })}
+                       </span>
+                    </div>
+                  </div>
+                  <div className="text-right hidden md:block px-8">
+                    <div className="text-2xl font-black text-primary">${(tx.amount / 100).toFixed(2)}</div>
+                    <div className="text-xs font-bold text-muted-foreground uppercase">{tx.currency}</div>
+                  </div>
+                </div>
+
+                <div className="px-8 pb-8 md:pb-0 md:border-l border-border/50 flex flex-row md:flex-col items-center justify-center gap-3 min-w-[180px]">
+                   <Badge className={`rounded-xl px-4 py-1.5 text-xs font-black w-full text-center border ${
+                     tx.status === 'succeeded' ? 'bg-green-500/5 text-green-600 border-green-500/20' : 
+                     tx.status === 'pending' ? 'bg-yellow-400/5 text-yellow-700 border-yellow-400/20' : 
+                     'bg-red-500/5 text-red-600 border-red-500/20'
+                   }`}>
+                     {tx.status.toUpperCase()}
+                   </Badge>
+                    <div className="flex gap-2 w-full">
+                       <Button 
+                         variant="ghost" 
+                         size="icon" 
+                         onClick={() => handleDownload(tx)}
+                         className="flex-1 h-12 rounded-2xl bg-muted/30 hover:bg-muted transition-colors"
+                       >
+                         <Download className="w-5 h-5" />
+                       </Button>
+                    </div>
+                </div>
+              </div>
+            </Card>
+          ))}
+          {!loading && filteredTransactions.length === 0 && (
+            <div className="py-32 text-center bg-muted/10 rounded-[48px] border-4 border-dashed border-border/50">
+               <CreditCard className="w-20 h-20 mx-auto mb-6 text-muted-foreground/20" />
+               <h3 className="text-2xl font-bold text-muted-foreground/50">No transactions found.</h3>
+               <p className="text-muted-foreground/40 mt-2">Your payment history will appear here once you book a consultation.</p>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }

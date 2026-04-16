@@ -12,11 +12,11 @@ services:
       - NODE_ENV=development
       - PORT=3001
       - MONGO_URI=mongodb://mongodb:27017/medicate_users
-      - JWT_SECRET=${JWT_SECRET:-your-super-secret-jwt-key-please-change-in-production}
+      - JWT_SECRET=${JWT_SECRET}
       - JWT_ISSUER=medicate-user-identity-service
       - JWT_AUDIENCE=medicate-platform
-      - JWT_EXPIRES_IN=1h
-      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET:-your-super-secret-refresh-key-please-change-in-production}
+      - JWT_EXPIRES_IN=15m
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
       - JWT_REFRESH_EXPIRES_IN=7d
     depends_on:
       mongodb:
@@ -38,9 +38,9 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - REDIS_PASSWORD=
-      - AGORA_APP_ID=e7f6e9aeecf14b2ba10e3f40be9f56e7
-      - AGORA_APP_CERTIFICATE=fb90ec88697e43a489af7be085b3ea59
-      - JWT_SECRET=${JWT_SECRET:-your-super-secret-jwt-key-please-change-in-production}
+      - AGORA_APP_ID=${AGORA_APP_ID}
+      - AGORA_APP_CERTIFICATE=${AGORA_APP_CERTIFICATE}
+      - JWT_SECRET=${JWT_SECRET}
       - JWT_ISSUER=medicate-user-identity-service
       - JWT_AUDIENCE=medicate-platform
     restart: on-failure
@@ -52,7 +52,6 @@ services:
     networks:
       - medicate-network
 
-  # Clinical Medical Service
   clinical-medical-service:
     build:
       context: ./services/clinical-medical-service
@@ -64,13 +63,13 @@ services:
       - PORT=5000
       - MONGO_URI=mongodb://mongodb:27017/medicate_clinical
       - NODE_ENV=production
-      - JWT_SECRET=${JWT_SECRET:-your-super-secret-jwt-key-please-change-in-production}
+      - JWT_SECRET=${JWT_SECRET}
       - JWT_ISSUER=medicate-user-identity-service
       - JWT_AUDIENCE=medicate-platform
-      - OPENAI_API_KEY=${OPENAI_API_KEY:-sk-placeholder-key}
-      - CLOUDINARY_API_KEY=${CLOUDINARY_API_KEY:-}
-      - CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET:-}
-      - CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - CLOUDINARY_API_KEY=${CLOUDINARY_API_KEY}
+      - CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET}
+      - CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME}
     restart: on-failure
     depends_on:
       mongodb:
@@ -78,7 +77,6 @@ services:
     networks:
       - medicate-network
 
-  # Transaction & Notification Service
   transaction-notify-service:
     build:
       context: ./services/transaction-notify-service
@@ -90,16 +88,16 @@ services:
       - PORT=3003
       - MONGODB_URI=mongodb://mongodb:27017/medicate_transactions
       - NODE_ENV=production
-      - JWT_SECRET=${JWT_SECRET:-your-super-secret-jwt-key-please-change-in-production}
+      - JWT_SECRET=${JWT_SECRET}
       - JWT_ISSUER=medicate-user-identity-service
       - JWT_AUDIENCE=medicate-platform
-      - STRIPE_API_KEY=${STRIPE_API_KEY:-sk_test_placeholder}
-      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET:-whsec_placeholder}
-      - NODEMAILER_EMAIL=${NODEMAILER_EMAIL:-noreply@medicate.com}
-      - NODEMAILER_PASSWORD=${NODEMAILER_PASSWORD:-}
-      - TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID:-}
-      - TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN:-}
-      - TWILIO_PHONE_NUMBER=${TWILIO_PHONE_NUMBER:-}
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
+      - NODEMAILER_EMAIL=${NODEMAILER_EMAIL}
+      - NODEMAILER_PASSWORD=${NODEMAILER_PASSWORD}
+      - TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID}
+      - TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN}
+      - TWILIO_PHONE_NUMBER=${TWILIO_PHONE_NUMBER}
     restart: on-failure
     depends_on:
       mongodb:
@@ -107,11 +105,12 @@ services:
     networks:
       - medicate-network
 
-  # Frontend React Client
   web-client:
     build:
       context: ./web-client
       dockerfile: Dockerfile
+      args:
+        - VITE_STRIPE_PUBLISHABLE_KEY=${VITE_STRIPE_PUBLISHABLE_KEY}
     container_name: medicate-web-client
     ports:
       - "3000:80"
@@ -120,6 +119,7 @@ services:
       - VITE_APPOINTMENT_SERVICE_URL=http://localhost:5004/api
       - VITE_CLINICAL_SERVICE_URL=http://localhost:5001/api
       - VITE_TRANSACTION_SERVICE_URL=http://localhost:3004/api
+      - VITE_STRIPE_PUBLISHABLE_KEY=${VITE_STRIPE_PUBLISHABLE_KEY}
     depends_on:
       - user-identity-service
       - appointment-service
