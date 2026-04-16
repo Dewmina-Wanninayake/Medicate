@@ -10,7 +10,7 @@ secrets.json
 config.local.*
 *.local
 
-# Secret YAML files - never commit actual secrets to repo
+# Secret YAML files
 *-secret.yaml
 *-secret.yml
 
@@ -19,14 +19,9 @@ api-keys.*
 credentials.*
 auth.*
 
-# Database files
-*.db
-*.sqlite
-*.sqlite3
-
-# Log files
-*.log
-logs/
+# Git files
+.git
+.gitignore
 
 # Node.js
 node_modules/
@@ -50,14 +45,24 @@ out/
 .DS_Store
 Thumbs.db
 
-# Kubernetes manifests
-k8s/
+# Documentation
+README.md
+*.md
 
-# Docker files (except .dockerignore)
-Dockerfile*
-docker-compose*.yml
+# Logs
+*.log
+logs/
 
 # Temporary files
 tmp/
 temp/
 *.tmp
+
+# Kubernetes manifests
+k8s/
+
+# Test files
+test/
+tests/
+*.test.js
+*.spec.js
