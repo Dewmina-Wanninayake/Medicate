@@ -89,6 +89,7 @@ export const adminAPI = {
   getStats:         ()       => api.get('/admin/stats'),
   listUsers:        (params) => api.get('/admin/users', { params }),
   getUserById:      (id)     => api.get(`/admin/users/${id}`),
+  updateUser:       (id, data) => api.put(`/admin/users/${id}`, data),
   deleteUser:       (id)     => api.delete(`/admin/users/${id}`),
   toggleUserStatus: (id)     => api.put(`/admin/users/${id}/toggle-status`),
   getPendingDoctors:()       => api.get('/admin/doctors/pending'),
@@ -102,9 +103,10 @@ export const paymentAPI = {
   confirmPayment:  (data)   => transactionApi.post('/payments/stripe/confirm', data),
   refund:          (data)   => transactionApi.post('/payments/stripe/refund', data),
   listMethods:     (params) => transactionApi.get('/payments/stripe/methods', { params }),
-  myTransactions:  ()       => transactionApi.get('/payments/my-transactions'),
+  myTransactions:  (params) => transactionApi.get('/payments/my-transactions', { params }),
   listTransactions:(params) => transactionApi.get('/payments/transactions', { params }),
   getTransaction:  (id)     => transactionApi.get(`/payments/transactions/${id}`),
+  updateStatus:    (id, data) => transactionApi.put(`/payments/transactions/${id}/status`, data),
 };
 
 // ── Notification endpoints (transaction-notify-service) ──────────

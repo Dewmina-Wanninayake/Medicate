@@ -22,8 +22,14 @@ let transporter = null;
 const getTransporter = async () => {
   if (transporter) return transporter;
 
-  if (process.env.NODE_ENV === 'development' && !process.env.SMTP_HOST) {
-    // Use Ethereal for development (auto-creates test account)
+  const hasSmtpCreds = !!(process.env.SMTP_HOST || process.env.NODEMAILER_EMAIL) &&
+                       !!(process.env.SMTP_PASS  || process.env.NODEMAILER_PASSWORD);
+
+  if (!hasSmtpCreds) {
+    // No real SMTP configured — use Ethereal so emails are captured and visible
+    // via the preview URL logged below. Works in dev AND production containers
+    // where credentials aren't set yet.
+    console.warn('[Email] No SMTP credentials found — falling back to Ethereal (test-only). Check logs for preview URLs.');
     const testAccount = await nodemailer.createTestAccount();
     transporter = nodemailer.createTransport({
       host:   'smtp.ethereal.email',
@@ -34,22 +40,23 @@ const getTransporter = async () => {
         pass: testAccount.pass,
       },
     });
-    console.log('[Email] Using Ethereal test account:', testAccount.user);
-  } else {
-    // Production SMTP (Gmail, SendGrid, AWS SES, etc.)
-    transporter = nodemailer.createTransport({
-      host:   process.env.SMTP_HOST   || 'smtp.gmail.com',
-      port:   parseInt(process.env.SMTP_PORT || '587'),
-      secure: process.env.SMTP_SECURE === 'true',
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-      },
-      pool: true,
-      maxConnections: 5,
-      maxMessages: 100,
-    });
+    console.log('[Email] Ethereal account:', testAccount.user);
+    return transporter;
   }
+
+  // Real SMTP credentials present
+  transporter = nodemailer.createTransport({
+    host:   process.env.SMTP_HOST   || 'smtp.gmail.com',
+    port:   parseInt(process.env.SMTP_PORT || '587'),
+    secure: process.env.SMTP_SECURE === 'true',
+    auth: {
+      user: process.env.SMTP_USER || process.env.NODEMAILER_EMAIL,
+      pass: process.env.SMTP_PASS || process.env.NODEMAILER_PASSWORD,
+    },
+    pool: true,
+    maxConnections: 5,
+    maxMessages: 100,
+  });
 
   // Verify connection
   try {

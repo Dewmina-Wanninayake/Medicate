@@ -19,7 +19,10 @@ export default function AppointmentsPage() {
     const fetchAppointments = async () => {
       try {
         const res = await appointmentAPI.list({});
-        setAppointments(res.data.appointments || []);
+        let apts = res.data.appointments || [];
+        // Sort by startTime: soonest first
+        apts.sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
+        setAppointments(apts);
       } catch (err) {
         console.error("Failed to fetch appointments:", err);
       } finally {
@@ -30,11 +33,11 @@ export default function AppointmentsPage() {
   }, []);
 
   const getStatusColor = (status) => {
-    switch (status) {
-      case 'Live': return 'bg-red-500 text-white';
-      case 'Scheduled': return 'bg-blue-500 text-white';
-      case 'Completed': return 'bg-green-500 text-white';
-      case 'Pending': return 'bg-yellow-500 text-white';
+    switch (status?.toLowerCase()) {
+      case 'live': return 'bg-red-500 text-white';
+      case 'scheduled': return 'bg-blue-500 text-white';
+      case 'completed': return 'bg-green-500 text-white';
+      case 'pending': return 'bg-yellow-500 text-white';
       default: return 'bg-gray-500 text-white';
     }
   };
@@ -120,10 +123,10 @@ export default function AppointmentsPage() {
                       <div className="space-y-1">
                         <div className="font-medium flex items-center gap-2">
                            <Calendar className="w-3 h-3 text-primary" />
-                           {new Date(appointment.date).toLocaleDateString()}
+                           {new Date(appointment.startTime).toLocaleDateString()}
                         </div>
                         <div className="text-sm text-muted-foreground flex items-center gap-2">
-                           <Clock className="w-3 h-3" /> {appointment.time}
+                           <Clock className="w-3 h-3" /> {new Date(appointment.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </div>
                       </div>
                     </td>
@@ -131,13 +134,13 @@ export default function AppointmentsPage() {
                       <Badge variant="secondary" className="rounded-full px-4">{appointment.specialty || 'General'}</Badge>
                     </td>
                     <td className="py-6 px-8">
-                      <Badge className={`rounded-full px-4 py-1 ${getStatusColor(appointment.status)}`}>
-                        {appointment.status || 'Pending'}
+                      <Badge className={`rounded-full px-4 py-1 ${getStatusColor(appointment.status)} capitalize`}>
+                        {appointment.status || 'pending'}
                       </Badge>
                     </td>
                     <td className="py-6 px-8 text-right">
                       <Button size="sm" variant="outline" className="rounded-full px-6 hover:bg-primary hover:text-white transition-colors">
-                        {appointment.status === 'Live' ? 'Join Call' : 'Details'}
+                        {appointment.status?.toLowerCase() === 'live' ? 'Join Call' : 'Details'}
                       </Button>
                     </td>
                   </tr>

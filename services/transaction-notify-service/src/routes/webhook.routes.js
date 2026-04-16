@@ -42,7 +42,7 @@ router.post(
 
           const tx = await Transaction.findOneAndUpdate(
             { gatewayTransactionId: intent.id },
-            { status: 'succeeded', gatewayPaymentId: intent.latest_charge },
+            { status: 'completed', gatewayPaymentId: intent.latest_charge },
             { new: true }
           );
 

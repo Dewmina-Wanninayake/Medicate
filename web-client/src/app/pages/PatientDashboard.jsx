@@ -14,6 +14,7 @@ import {
   Activity
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { appointmentAPI, clinicalAPI } from '../services/api';
 import AdminTools from '../components/admin/AdminTools';
 
 export default function PatientDashboard() {
@@ -62,16 +63,17 @@ export default function PatientDashboard() {
     }
   };
 
-  const upcomingAppointments = appointments.filter(
-    apt => apt.status === 'Scheduled' || apt.status === 'Live' || apt.status === 'Pending'
-  );
+  const upcomingAppointments = appointments.filter(apt => {
+    const s = apt.status?.toLowerCase();
+    return s === 'scheduled' || s === 'live' || s === 'pending';
+  });
 
   const getStatusColor = (status) => {
-    switch (status) {
-      case 'Live': return 'bg-red-500 text-white animate-pulse';
-      case 'Scheduled': return 'bg-blue-500 text-white';
-      case 'Completed': return 'bg-green-500 text-white';
-      case 'Pending': return 'bg-yellow-500 text-white';
+    switch (status?.toLowerCase()) {
+      case 'live': return 'bg-red-500 text-white animate-pulse';
+      case 'scheduled': return 'bg-blue-500 text-white';
+      case 'completed': return 'bg-green-500 text-white';
+      case 'pending': return 'bg-yellow-500 text-white';
       default: return 'bg-gray-500 text-white';
     }
   };
@@ -175,12 +177,12 @@ export default function PatientDashboard() {
                         <div className="flex items-center gap-3 text-sm text-muted-foreground">
                           <span className="flex items-center gap-1">
                             <Clock className="w-3 h-3" />
-                            {new Date(appointment.date).toLocaleDateString() || appointment.date} {appointment.time}
+                            {new Date(appointment.startTime).toLocaleDateString()} {new Date(appointment.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </span>
                         </div>
                       </div>
                       <div className="flex items-center gap-3">
-                        <Badge className={`rounded-full ${getStatusColor(appointment.status)}`}>
+                        <Badge className={`rounded-full ${getStatusColor(appointment.status)} capitalize`}>
                           {appointment.status}
                         </Badge>
                         {appointment.status === 'Live' && (
