@@ -18,7 +18,7 @@ const ctrl     = require('../controllers/notification.controller');
 router.post(
   '/send',
   authenticate,
-  authorize('admin', 'doctor'),
+  authorize('admin', 'doctor', 'patient'),
   [
     body('recipientId').notEmpty().withMessage('recipientId is required'),
     body('recipientRole').isIn(['patient', 'doctor', 'admin']).withMessage('invalid recipientRole'),

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { Input } from '../components/ui/input';
@@ -9,6 +10,7 @@ import { useAuth } from '../context/AuthContext';
 
 export default function AppointmentsPage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const isAdminOrDoctor = ['admin', 'doctor'].includes(user?.role);
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -49,7 +51,10 @@ export default function AppointmentsPage() {
           </p>
         </div>
         {!isAdminOrDoctor && (
-          <Button className="rounded-full bg-primary hover:bg-accent gap-2 px-6">
+          <Button 
+            onClick={() => navigate('/')}
+            className="rounded-full bg-primary hover:bg-accent gap-2 px-6"
+          >
             <Plus className="w-5 h-5" /> Book New Appointment
           </Button>
         )}

@@ -86,7 +86,13 @@ app.use((_req, res) => {
 // ─── Global error handler ─────────────────────────────────────────────────────
 app.use((err, _req, res, _next) => {
   console.error('[Error]', err.stack || err.message);
-  const status = err.statusCode || err.status || 500;
+  let status = err.statusCode || err.status || 500;
+  
+  // Prevent Stripe's authentication errors (401) from confusing the frontend JWT interceptor
+  if (err.type === 'StripeAuthenticationError' && status === 401) {
+    status = 500;
+  }
+
   res.status(status).json({
     success: false,
     error: err.message || 'Internal Server Error',
