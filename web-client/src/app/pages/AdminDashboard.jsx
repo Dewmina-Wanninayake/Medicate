@@ -4,7 +4,8 @@ import { adminAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
-import { Users, Stethoscope, Clock, ShieldCheck, LogOut, CheckCircle, XCircle, ToggleLeft } from 'lucide-react';
+import { Users, Stethoscope, Clock, ShieldCheck, LogOut, CheckCircle, XCircle, ToggleLeft, DollarSign } from 'lucide-react';
+import { paymentAPI } from '../services/api';
 
 export default function AdminDashboard() {
   const { user, logout } = useAuth();
@@ -13,6 +14,7 @@ export default function AdminDashboard() {
   const [stats, setStats]           = useState(null);
   const [pendingDoctors, setPending] = useState([]);
   const [allUsers, setAllUsers]      = useState([]);
+  const [transactions, setTransactions] = useState([]);
   const [activeTab, setActiveTab]    = useState('overview');
   const [loading, setLoading]        = useState(true);
 
@@ -23,14 +25,16 @@ export default function AdminDashboard() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [statsRes, pendingRes, usersRes] = await Promise.all([
+      const [statsRes, pendingRes, usersRes, txRes] = await Promise.all([
         adminAPI.getStats(),
         adminAPI.getPendingDoctors(),
         adminAPI.listUsers(),
+        paymentAPI.listTransactions({ limit: 50 }),
       ]);
       setStats(statsRes.data.data);
       setPending(pendingRes.data.data.doctors);
       setAllUsers(usersRes.data.data.users);
+      setTransactions(txRes.data.data || []);
     } catch (err) {
       console.error('Failed to fetch admin data:', err);
     } finally {
@@ -98,7 +102,7 @@ export default function AdminDashboard() {
               { label: 'Total Patients', value: stats.totalPatients,  icon: Users,       color: 'text-blue-500' },
               { label: 'Total Doctors',  value: stats.totalDoctors,   icon: Stethoscope, color: 'text-green-500' },
               { label: 'Pending Verify', value: stats.pendingDoctors, icon: Clock,        color: 'text-yellow-500' },
-              { label: 'Inactive Users', value: stats.inactiveUsers,  icon: XCircle,     color: 'text-red-500' },
+              { label: 'Revenue',        value: `$${(transactions.reduce((acc, t) => t.status === 'succeeded' ? acc + t.amount : acc, 0) / 100).toFixed(2)}`,  icon: DollarSign,     color: 'text-primary' },
             ].map((stat) => (
               <Card key={stat.label} className="rounded-3xl border-none shadow-md">
                 <CardContent className="p-6 flex items-center gap-4">
@@ -116,8 +120,9 @@ export default function AdminDashboard() {
         {/* Tabs */}
         <div className="flex gap-2 mb-6">
           {[
-            { id: 'overview', label: 'Pending Doctors' },
-            { id: 'users',    label: 'All Users' },
+            { id: 'overview',   label: 'Pending Doctors' },
+            { id: 'users',      label: 'All Users' },
+            { id: 'financials', label: 'Financial Records' },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -223,6 +228,58 @@ export default function AdminDashboard() {
                     )}
                   </div>
                 ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Financials Tab */}
+        {activeTab === 'financials' && (
+          <Card className="rounded-3xl border-none shadow-md">
+            <CardHeader>
+              <CardTitle className="text-lg">Platform Transactions</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto text-sm">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-border">
+                      <th className="pb-3 font-semibold text-muted-foreground">Date</th>
+                      <th className="pb-3 font-semibold text-muted-foreground">Patient ID</th>
+                      <th className="pb-3 font-semibold text-muted-foreground text-right">Amount</th>
+                      <th className="pb-3 font-semibold text-muted-foreground text-center">Status</th>
+                      <th className="pb-3 font-semibold text-muted-foreground">Gateway</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {transactions.map((tx) => (
+                      <tr key={tx.transactionId || tx._id} className="group hover:bg-muted/30 transition-colors">
+                        <td className="py-4 text-muted-foreground">
+                          {new Date(tx.createdAt).toLocaleDateString()}
+                        </td>
+                        <td className="py-4 font-mono text-xs">{tx.patientId}</td>
+                        <td className="py-4 font-bold text-primary text-right">${(tx.amount / 100).toFixed(2)}</td>
+                        <td className="py-4 text-center">
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase ${
+                            tx.status === 'succeeded' ? 'bg-green-100 text-green-700' :
+                            tx.status === 'pending'   ? 'bg-yellow-100 text-yellow-700' :
+                                                       'bg-red-100 text-red-700'
+                          }`}>
+                            {tx.status}
+                          </span>
+                        </td>
+                        <td className="py-4 text-muted-foreground text-xs uppercase">{tx.gateway || 'stripe'}</td>
+                      </tr>
+                    ))}
+                    {(!transactions || transactions.length === 0) && (
+                      <tr>
+                        <td colSpan="5" className="py-12 text-center text-muted-foreground italic">
+                          No transactions recorded on this platform yet.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
               </div>
             </CardContent>
           </Card>
