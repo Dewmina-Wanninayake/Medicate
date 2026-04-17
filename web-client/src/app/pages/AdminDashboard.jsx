@@ -4,6 +4,7 @@ import { adminAPI, paymentAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
+import { Badge } from '../components/ui/badge';
 import { Users, Stethoscope, Clock, ShieldCheck, LogOut, CheckCircle, XCircle, ToggleLeft } from 'lucide-react';
 
 export default function AdminDashboard() {

@@ -1,11 +1,19 @@
-import { Menu, Search, Bell, Activity, Stethoscope, Video, FileText, User } from "lucide-react";
+import { Menu, Search, Bell, Activity, Stethoscope, Video, FileText, User as UserIcon } from "lucide-react";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { Link, useLocation } from "react-router";
 import { useTelemedicine } from "../context/TelemedicineContext";
+import { useAuth } from "../context/AuthContext";
+import {
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+} from "./ui/dialog";
+import PatientProfileModal from "./PatientProfileModal";
 
 export default function Header({ toggleSidebar }) {
   const location = useLocation();
+  const { user } = useAuth();
   const { 
     role, setRole, 
     doctorView, setDoctorView, 
@@ -13,6 +21,11 @@ export default function Header({ toggleSidebar }) {
     adminView, setAdminView,
     doctorNavItems, patientNavItems, adminNavItems
   } = useTelemedicine();
+
+  const getInitials = (user) => {
+    if (!user) return "??";
+    return `${user.firstName?.[0] || ""}${user.lastName?.[0] || ""}`.toUpperCase() || "U";
+  };
 
   const isTelemedicinePage = location.pathname.startsWith('/telemedicine');
 
@@ -118,9 +131,16 @@ export default function Header({ toggleSidebar }) {
           <span className="absolute top-1 right-1 w-2 h-2 bg-destructive rounded-full"></span>
         </Button>
         
-        <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-semibold shadow-sm cursor-pointer hover:opacity-90 transition-opacity">
-          SA
-        </div>
+        <Dialog>
+          <DialogTrigger asChild>
+            <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-semibold shadow-sm cursor-pointer hover:opacity-90 transition-opacity">
+              {getInitials(user)}
+            </div>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[600px] rounded-[32px]">
+            <PatientProfileModal user={user} />
+          </DialogContent>
+        </Dialog>
       </div>
     </header>
   );

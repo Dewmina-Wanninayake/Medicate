@@ -20,8 +20,8 @@ export default function AppointmentsPage() {
       try {
         const res = await appointmentAPI.list({});
         let apts = res.data.appointments || [];
-        // Sort by startTime: soonest first
-        apts.sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
+        // Sort by startTime: newest first (so recent bookings appear at the top)
+        apts.sort((a, b) => new Date(b.startTime) - new Date(a.startTime));
         setAppointments(apts);
       } catch (err) {
         console.error("Failed to fetch appointments:", err);

@@ -46,7 +46,10 @@ exports.createStripeIntent = async (req, res, next) => {
       patientName,
       patientPhone,
       doctorId,
+      doctorName,
       appointmentId,
+      appointmentDate,
+      appointmentTime,
       description,
     } = req.body;
 
@@ -78,7 +81,10 @@ exports.createStripeIntent = async (req, res, next) => {
         patientName,
         patientPhone: typeof formattedPhone === 'string' ? formattedPhone : '',
         doctorId,
+        doctorName: doctorName || '',
         appointmentId: appointmentId || '',
+        appointmentDate: appointmentDate || '',
+        appointmentTime: appointmentTime || '',
       },
     });
 
@@ -96,6 +102,14 @@ exports.createStripeIntent = async (req, res, next) => {
       description,
       status: 'pending',
       ipAddress: req.ip,
+      metadata: {
+        patientEmail,
+        patientName,
+        patientPhone: typeof formattedPhone === 'string' ? formattedPhone : '',
+        doctorName: doctorName || '',
+        appointmentDate: appointmentDate || '',
+        appointmentTime: appointmentTime || '',
+      },
     });
 
     res.status(201).json({
@@ -131,6 +145,7 @@ exports.confirmStripePayment = async (req, res, next) => {
       patientEmail,
       patientName,
       patientPhone,
+      doctorName,
       appointmentDate,
       appointmentTime
     } = req.body;
@@ -159,7 +174,9 @@ exports.confirmStripePayment = async (req, res, next) => {
 
     // Fire notifications immediately if confirmed succeeded
     if (newStatus === 'completed' && tx) {
-      await _sendPaymentSuccessNotifications(tx, { patientEmail, patientName, patientPhone: formattedPhone, appointmentDate, appointmentTime });
+      // Pull doctorName from request body first, then transaction metadata
+      const resolvedDoctorName = doctorName || tx.metadata?.doctorName || '';
+      await _sendPaymentSuccessNotifications(tx, { patientEmail, patientName, patientPhone: formattedPhone, doctorName: resolvedDoctorName, appointmentDate, appointmentTime });
 
       // Also notify Appt Service manually for local env without webhooks
       if (tx.appointmentId) {
@@ -387,18 +404,20 @@ exports.updateTransactionStatus = async (req, res, next) => {
 
 // ─── Private helper ───────────────────────────────────────────────────────────
 
-async function _sendPaymentSuccessNotifications(tx, { patientEmail, patientName, patientPhone, appointmentDate, appointmentTime }) {
+async function _sendPaymentSuccessNotifications(tx, { patientEmail, patientName, patientPhone, doctorName, appointmentDate, appointmentTime }) {
   const templateData = {
-    patientName: patientName || 'Patient',
+    patientName: patientName || tx.metadata?.patientName || 'Patient',
     amount: tx.amount,
     currency: tx.currency,
     transactionId: tx.transactionId,
-    doctorName: tx.metadata?.doctorName || 'Doctor',
+    doctorName: doctorName || tx.metadata?.doctorName || 'Doctor',
     appointmentDate: appointmentDate || tx.metadata?.appointmentDate || '',
     appointmentTime: appointmentTime || tx.metadata?.appointmentTime || '',
   };
 
   const notificationType = tx.appointmentId ? 'appointment_confirmation' : 'payment_success';
+
+  console.log(`[Notify] Preparing ${notificationType} notifications — Email: ${patientEmail || 'N/A'}, Phone: ${patientPhone || 'N/A'}, Doctor: ${templateData.doctorName}`);
 
   const notifBase = {
     recipientId: tx.patientId,
@@ -428,6 +447,7 @@ async function _sendPaymentSuccessNotifications(tx, { patientEmail, patientName,
         { transactionId: tx.transactionId },
         { receiptEmailSent: true }
       );
+      console.log(`[Notify] ✅ Email sent to ${patientEmail} — MessageId: ${result.messageId}`);
     } catch (err) {
       console.error('[Notify] Email failed:', err.message);
       await Notification.create({
@@ -438,6 +458,8 @@ async function _sendPaymentSuccessNotifications(tx, { patientEmail, patientName,
         failureReason: err.message,
       });
     }
+  } else {
+    console.warn('[Notify] ⚠️ No patientEmail provided — skipping email notification');
   }
 
   if (patientPhone) {
@@ -460,6 +482,7 @@ async function _sendPaymentSuccessNotifications(tx, { patientEmail, patientName,
         { transactionId: tx.transactionId },
         { receiptSmsSent: true }
       );
+      console.log(`[Notify] ✅ SMS sent to ${patientPhone} — SID: ${result.sid}`);
     } catch (err) {
       console.error('[Notify] SMS failed:', err.message);
       await Notification.create({
@@ -470,5 +493,7 @@ async function _sendPaymentSuccessNotifications(tx, { patientEmail, patientName,
         failureReason: err.message,
       });
     }
+  } else {
+    console.warn('[Notify] ⚠️ No patientPhone provided — skipping SMS notification');
   }
 }

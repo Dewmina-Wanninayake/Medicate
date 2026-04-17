@@ -15,12 +15,14 @@ import {
 } from 'lucide-react';
 import { appointmentAPI, paymentAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router';
 import StripePaymentWrapper from './booking/StripePaymentWrapper';
 import PaymentForm from './booking/PaymentForm';
 import { toast } from 'sonner';
 
 export default function BookingModal({ open, onClose, doctor }) {
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   const [step, setStep] = useState(1);
   const [selectedDate, setSelectedDate] = useState('');
@@ -107,6 +109,7 @@ export default function BookingModal({ open, onClose, doctor }) {
         patientName: user.name || user.firstName || 'Patient',
         patientPhone,
         doctorId: doctor._id || doctor.id,
+        doctorName: doctor.name || 'Doctor',
         appointmentId: apptId,
         description: `Consultation with Dr. ${doctor.name}`,
         appointmentDate: selectedDate,
@@ -146,6 +149,7 @@ export default function BookingModal({ open, onClose, doctor }) {
           patientEmail: user.email,
           patientName: user.name || user.firstName || 'Patient',
           patientPhone: confirmPhone,
+          doctorName: doctor.name || 'Doctor',
           appointmentDate: selectedDate,
           appointmentTime: selectedTime
         });
@@ -183,6 +187,11 @@ export default function BookingModal({ open, onClose, doctor }) {
       setAppointmentId('');
       setConsultationFee(null);
     }, 400);
+  };
+
+  const handleGoToDashboard = () => {
+    resetAndClose();
+    navigate('/dashboard');
   };
 
   return (
@@ -443,7 +452,7 @@ export default function BookingModal({ open, onClose, doctor }) {
               </div>
 
               <Button
-                onClick={resetAndClose}
+                onClick={handleGoToDashboard}
                 className="w-full rounded-3xl h-12 bg-primary hover:bg-accent"
               >
                 Go to Dashboard
