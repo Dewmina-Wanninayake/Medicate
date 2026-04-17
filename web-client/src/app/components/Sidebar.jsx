@@ -1,9 +1,11 @@
 import { Link, useLocation } from "react-router";
 import { LogOut } from "lucide-react";
 import { Button } from "./ui/button";
+import { useAuth } from "../context/AuthContext";
 
 export default function Sidebar({ isExpanded, navigation }) {
   const location = useLocation();
+  const { logout } = useAuth();
 
   return (
     <aside 
@@ -36,7 +38,7 @@ export default function Sidebar({ isExpanded, navigation }) {
         <Button 
           variant="outline" 
           className={`w-full rounded-2xl transition-all ${isExpanded ? "justify-start gap-3" : "justify-center px-0"}`}
-          onClick={() => window.location.href = '/'}
+          onClick={logout}
           title={!isExpanded ? "Logout" : undefined}
         >
           <LogOut className="w-5 h-5 flex-shrink-0" />

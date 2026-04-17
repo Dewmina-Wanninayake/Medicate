@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
@@ -12,13 +12,30 @@ import {
   Activity,
   Clock
 } from 'lucide-react';
-import { mockAppointments } from '../data/mockData';
+import { appointmentAPI, userAPI } from '../services/api';
 
 export default function DoctorDashboard() {
+  const [appointments, setAppointments] = useState([]);
+  const [statsData, setStatsData] = useState({ totalPatients: 0, totalAppointments: 0, revenue: 0 });
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const aptRes = await appointmentAPI.list({});
+        const apts = aptRes.data.appointments || [];
+        setAppointments(apts);
+        setStatsData(prev => ({ ...prev, totalAppointments: apts.length }));
+      } catch (err) {
+        console.error("Failed to fetch dashboard data:", err);
+      }
+    };
+    fetchData();
+  }, []);
+
   const stats = [
     {
       title: 'Total Appointments',
-      value: '142',
+      value: statsData.totalAppointments.toString(),
       change: '+12%',
       icon: Calendar,
       color: 'text-blue-600',
@@ -26,7 +43,7 @@ export default function DoctorDashboard() {
     },
     {
       title: 'Pending Consultations',
-      value: '8',
+      value: appointments.filter(a => a.status?.toLowerCase() === 'pending').length.toString(),
       change: '+3',
       icon: Clock,
       color: 'text-orange-600',
@@ -34,7 +51,7 @@ export default function DoctorDashboard() {
     },
     {
       title: 'Total Patients',
-      value: '1,248',
+      value: '1,248', // Replace with real stats if available
       change: '+8%',
       icon: Users,
       color: 'text-green-600',
@@ -42,7 +59,7 @@ export default function DoctorDashboard() {
     },
     {
       title: 'Revenue',
-      value: '$12,450',
+      value: '$12,450', // Replace with real logic
       change: '+15%',
       icon: DollarSign,
       color: 'text-primary',
@@ -50,19 +67,20 @@ export default function DoctorDashboard() {
     }
   ];
 
-  const todayAppointments = mockAppointments.filter(
-    apt => apt.status === 'Live' || apt.status === 'Scheduled'
-  );
+  const todayAppointments = appointments.filter(apt => {
+    const s = apt.status?.toLowerCase();
+    return s === 'live' || s === 'scheduled';
+  });
 
   const getStatusColor = (status) => {
-    switch (status) {
-      case 'Live':
+    switch (status?.toLowerCase()) {
+      case 'live':
         return 'bg-red-500 text-white animate-pulse';
-      case 'Scheduled':
+      case 'scheduled':
         return 'bg-blue-500 text-white';
-      case 'Completed':
+      case 'completed':
         return 'bg-green-500 text-white';
-      case 'Pending':
+      case 'pending':
         return 'bg-yellow-500 text-white';
       default:
         return 'bg-gray-500 text-white';
@@ -111,7 +129,7 @@ export default function DoctorDashboard() {
               <div className="space-y-4">
                 {todayAppointments.map((appointment) => (
                   <div
-                    key={appointment.id}
+                    key={appointment._id || appointment.id}
                     className="flex items-center gap-4 p-4 rounded-3xl bg-muted/30 hover:bg-muted/50 transition-colors border border-border/50"
                   >
                     <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center font-semibold text-primary">
@@ -128,7 +146,7 @@ export default function DoctorDashboard() {
                       <div className="flex items-center gap-3 text-sm text-muted-foreground">
                         <span className="flex items-center gap-1">
                           <Clock className="w-3 h-3" />
-                          {appointment.time}
+                          {new Date(appointment.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </span>
                         <span>•</span>
                         <span>{appointment.specialty}</span>
@@ -149,12 +167,12 @@ export default function DoctorDashboard() {
                     </div>
 
                     <div className="flex items-center gap-3">
-                      <Badge className={`rounded-full ${getStatusColor(appointment.status)}`}>
+                      <Badge className={`rounded-full ${getStatusColor(appointment.status)} capitalize`}>
                         {appointment.status}
                       </Badge>
                       
-                      {appointment.status === 'Live' && (
-                        <Link to={`/telemedicine/${appointment.id}`}>
+                      {appointment.status?.toLowerCase() === 'live' && (
+                        <Link to={`/telemedicine/${appointment._id || appointment.id}`}>
                           <Button
                             size="sm"
                             className="rounded-full bg-primary hover:bg-accent gap-2"
@@ -165,7 +183,7 @@ export default function DoctorDashboard() {
                         </Link>
                       )}
                       
-                      {appointment.status === 'Scheduled' && (
+                      {appointment.status?.toLowerCase() === 'scheduled' && (
                         <Button
                           size="sm"
                           variant="outline"
@@ -197,7 +215,7 @@ export default function DoctorDashboard() {
                 .slice(0, 2)
                 .map((appointment) => (
                   <div
-                    key={appointment.id}
+                    key={appointment._id || appointment.id}
                     className="p-4 rounded-3xl bg-card border border-border"
                   >
                     <div className="flex items-center gap-2 mb-2">
@@ -209,7 +227,7 @@ export default function DoctorDashboard() {
                           {appointment.patientName}
                         </div>
                         <div className="text-xs text-muted-foreground">
-                          {appointment.time}
+                          {new Date(appointment.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </div>
                       </div>
                     </div>

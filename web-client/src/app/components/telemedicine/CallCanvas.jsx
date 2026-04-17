@@ -7,15 +7,12 @@ export default function CallCanvas({ doctor, agoraCredentials, onJoinSuccess, on
   const [engineReady, setEngineReady] = useState(false);
 
   useEffect(() => {
-    // In a real sophisticated Agora setup using purely 'agora-rtc-react' or vanilla JS, 
-    // we would listen for `client.on('connection-state-change')`.
-    // Since we are leveraging the abstraction wrapper of `AgoraUIKit`, 
-    // it connects automatically upon mounting. We simulate the connection lock here 
-    // to strictly trigger the state machine transition per UI requirement.
+    // We keep a small delay to allow the "Initializing..." overlay to show 
+    // and for the Agora UIKit to mount and start its internal connection.
     const bootstrapEngine = setTimeout(() => {
       setEngineReady(true);
-      onJoinSuccess(); // Triggers the visual transition from CONNECTING to IN-CALL
-    }, 2500);
+      if (onJoinSuccess) onJoinSuccess();
+    }, 1500); // reduced from 2500 for better responsiveness
 
     return () => clearTimeout(bootstrapEngine);
   }, [onJoinSuccess]);
@@ -87,3 +84,4 @@ export default function CallCanvas({ doctor, agoraCredentials, onJoinSuccess, on
     </div>
   );
 }
+
