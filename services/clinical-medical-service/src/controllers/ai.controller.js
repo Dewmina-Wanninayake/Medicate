@@ -18,7 +18,7 @@ exports.checkSymptoms = async (req, res) => {
     const patientContext = age && gender ? `Patient: ${gender}, ${age} years old.` : '';
 
     const response = await client.chat.completions.create({
-      model:      'gpt-4o-mini',
+      model: 'gpt-4o-mini',
       max_tokens: 500,
       messages: [
         {
@@ -57,7 +57,7 @@ Keep responses concise. Never diagnose definitively. Always recommend seeing a r
 
     res.status(200).json({
       success: true,
-      data:       suggestion,
+      data: suggestion,
       disclaimer: 'This is not a medical diagnosis. Please consult a qualified doctor.'
     });
 

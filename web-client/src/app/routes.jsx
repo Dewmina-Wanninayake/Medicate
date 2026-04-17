@@ -23,10 +23,15 @@ import DoctorSchedule from "./pages/doctor/DoctorSchedule";
 import DoctorMessages from "./pages/doctor/DoctorMessages";
 import DoctorProfile from "./pages/doctor/DoctorProfile";
 
+// Patient Pages
+import MyAppointmentsPage from "./pages/patient/MyAppointmentsPage";
+import MyMedicalRecordsPage from "./pages/patient/MyMedicalRecordsPage";
+import MyPrescriptionsPage from "./pages/patient/MyPrescriptionsPage";
+
 export const router = createBrowserRouter([
   {
     path: "/",
-    element: <Navigate to="/dashboard" replace />,
+    Component: LandingPage,
   },
   {
     path: "/login",
@@ -66,12 +71,13 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        Component: LandingPage,
+        element: <Navigate to="dashboard" replace />,
       },
       {
         path: "dashboard",
         Component: DashboardRouter,
       },
+      // ── Shared / Legacy routes ──────────────────────────────────
       {
         path: "appointments",
         Component: AppointmentsPage,
@@ -96,7 +102,20 @@ export const router = createBrowserRouter([
         path: "settings",
         Component: SettingsPage,
       },
-      // Doctor Routes
+      // ── Patient-specific routes ─────────────────────────────────
+      {
+        path: "my-appointments",
+        Component: MyAppointmentsPage,
+      },
+      {
+        path: "records",
+        Component: MyMedicalRecordsPage,
+      },
+      {
+        path: "prescriptions",
+        Component: MyPrescriptionsPage,
+      },
+      // ── Doctor routes ───────────────────────────────────────────
       {
         path: "doctor/appointments",
         Component: DoctorAppointments,
@@ -122,10 +141,13 @@ export const router = createBrowserRouter([
   {
     path: "*",
     Component: () => (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-4xl mb-4">404 - Page Not Found</h1>
-          <a href="/" className="text-primary hover:underline">Return Home</a>
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center space-y-4">
+          <h1 className="text-6xl font-black text-primary">404</h1>
+          <p className="text-2xl font-bold text-muted-foreground">Page Not Found</p>
+          <a href="/dashboard" className="inline-block mt-4 px-8 py-3 rounded-full bg-primary text-white font-bold hover:bg-accent transition-colors">
+            Return to Dashboard
+          </a>
         </div>
       </div>
     ),
