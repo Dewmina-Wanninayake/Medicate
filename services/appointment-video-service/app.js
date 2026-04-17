@@ -10,11 +10,18 @@ const app = express();
 const server = http.createServer(app);
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json());
 
-// Database Connection
-connectDB();
+// Request Logger
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  next();
+});
 
 // Root Route
 app.get('/', (req, res) => {
@@ -44,7 +51,14 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Something went wrong!' });
 });
 
-const PORT = process.env.PORT || 5003;
-server.listen(PORT, () => {
-  console.log(`Appointment Service running on port ${PORT}`);
-});
+const startServer = async () => {
+  await connectDB();
+  require('./config/redis');
+
+  const PORT = process.env.PORT || 5003;
+  server.listen(PORT, () => {
+    console.log(`Appointment Service running on port ${PORT}`);
+  });
+};
+
+startServer();

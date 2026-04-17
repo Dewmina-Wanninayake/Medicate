@@ -1,12 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router';
-import { Search, Video, Calendar, Shield, Clock, Star, ChevronRight } from 'lucide-react';
+import { Search, Video, Calendar, Shield, Clock, Star, ChevronRight, Loader2 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Card, CardContent } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
-import { mockDoctors, specialties } from '../data/mockData';
+import { mockDoctors as fallbackDoctors, specialties } from '../data/mockData';
+import { clinicalAPI } from '../services/api';
 import BookingModal from '../components/BookingModal';
 import MobileNav from '../components/MobileNav';
 
@@ -14,12 +14,34 @@ export default function LandingPage() {
   const [symptomText, setSymptomText] = useState('');
   const [selectedDoctor, setSelectedDoctor] = useState(null);
   const [aiResults, setAiResults] = useState(null);
+  const [doctors, setDoctors] = useState([]);
+  const [loadingDocs, setLoadingDocs] = useState(true);
 
-  const handleSymptomCheck = () => {
+  useEffect(() => {
+    const fetchDoctors = async () => {
+      try {
+        const res = await clinicalAPI.listDoctors();
+        // The service returns { success, count, doctors, data: doctors }
+        setDoctors(res.data.doctors || res.data.data || []);
+      } catch (err) {
+        console.error("Failed to fetch doctors:", err);
+        setDoctors(fallbackDoctors);
+      } finally {
+        setLoadingDocs(false);
+      }
+    };
+    fetchDoctors();
+  }, []);
+
+  const handleSymptomCheck = async () => {
     if (symptomText.trim()) {
-      setAiResults(
-        `Based on your symptoms: "${symptomText}", our AI suggests consulting with a Cardiologist or General Practitioner. Common causes include stress, anxiety, or cardiac concerns. Please book an appointment for proper diagnosis.`
-      );
+      setAiResults("Analyzing symptoms...");
+      try {
+        const res = await clinicalAPI.aiSymptomCheck({ symptoms: symptomText });
+        setAiResults(res.data.data.analysis || "Our AI could not reach a conclusion. Please consult a doctor.");
+      } catch (err) {
+        setAiResults("AI Analysis currently unavailable. Please consult your primary care doctor directly.");
+      }
     }
   };
 
@@ -155,43 +177,54 @@ export default function LandingPage() {
         </div>
 
         <div className="grid md:grid-cols-3 gap-8">
-          {mockDoctors.slice(0, 6).map((doctor) => (
-            <Card
-              key={doctor.id}
-              className="rounded-[32px] border-none shadow-lg hover:shadow-2xl transition-all hover:-translate-y-2 cursor-pointer overflow-hidden bg-card"
-              onClick={() => setSelectedDoctor(doctor.id)}
-            >
-              <div className="relative h-48 overflow-hidden">
-                <img
-                  src={doctor.imageUrl}
-                  alt={doctor.name}
-                  className="w-full h-full object-cover"
-                />
-                {doctor.available && (
-                  <Badge className="absolute top-4 right-4 rounded-full bg-green-500">
-                    Available
-                  </Badge>
-                )}
-              </div>
-              <CardContent className="p-6">
-                <h3 className="text-xl mb-1">{doctor.name}</h3>
-                <Badge variant="secondary" className="rounded-full mb-3">
-                  {doctor.specialty}
-                </Badge>
-                <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
-                  <div className="flex items-center gap-1">
-                    <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                    <span className="font-semibold text-foreground">{doctor.rating}</span>
-                    <span>({doctor.reviewCount})</span>
-                  </div>
-                  <div>{doctor.experience}y exp</div>
+          {loadingDocs ? (
+            <div className="col-span-3 py-20 text-center flex flex-col items-center opacity-50">
+              <Loader2 className="w-10 h-10 animate-spin mb-4 text-primary" />
+              <p>Finding specialist doctors for you...</p>
+            </div>
+          ) : doctors.length === 0 ? (
+            <div className="col-span-3 py-20 text-center opacity-50">
+              <p>No doctors currently available. Please check back later.</p>
+            </div>
+          ) : (
+            doctors.slice(0, 6).map((doctor) => (
+              <Card
+                key={doctor._id || doctor.id}
+                className="rounded-[32px] border-none shadow-lg hover:shadow-2xl transition-all hover:-translate-y-2 cursor-pointer overflow-hidden bg-card"
+                onClick={() => setSelectedDoctor(doctor._id || doctor.id)}
+              >
+                <div className="relative h-48 overflow-hidden">
+                  <img
+                    src={doctor.imageUrl || 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=400'}
+                    alt={doctor.name}
+                    className="w-full h-full object-cover"
+                  />
+                  {(doctor.available || doctor.availability?.isAvailable !== false) && (
+                    <Badge className="absolute top-4 right-4 rounded-full bg-green-500">
+                      Available
+                    </Badge>
+                  )}
                 </div>
-                <Button className="w-full rounded-3xl bg-primary hover:bg-accent">
-                  Book Now
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
+                <CardContent className="p-6">
+                  <h3 className="text-xl mb-1">{doctor.name}</h3>
+                  <Badge variant="secondary" className="rounded-full mb-3">
+                    {doctor.specialty || doctor.specialization}
+                  </Badge>
+                  <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
+                    <div className="flex items-center gap-1">
+                      <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                      <span className="font-semibold text-foreground">{doctor.rating || '4.9'}</span>
+                      <span>({doctor.reviewCount || '100+'})</span>
+                    </div>
+                    <div>{doctor.experience || '10+'}y exp</div>
+                  </div>
+                  <Button className="w-full rounded-3xl bg-primary hover:bg-accent">
+                    Book Now
+                  </Button>
+                </CardContent>
+              </Card>
+            ))
+          )}
         </div>
       </section>
 
@@ -260,7 +293,7 @@ export default function LandingPage() {
       <BookingModal
         open={!!selectedDoctor}
         onClose={() => setSelectedDoctor(null)}
-        doctor={mockDoctors.find(d => d.id === selectedDoctor)}
+        doctor={doctors.find(d => (d._id || d.id) === selectedDoctor)}
       />
 
       {/* Mobile Navigation */}
