@@ -1,16 +1,5 @@
 # 🏥 Medicate - Smart Healthcare Platform
 
-<p align="center">
-  <img src="docs/assets/banner.png" alt="Medicate Banner" width="100%">
-</p>
-
-<p align="center">
-  <img src="https://img.shields.io/badge/build-passing-brightgreen" alt="Build Status">
-  <img src="https://img.shields.io/badge/license-MIT-blue" alt="License">
-  <img src="https://img.shields.io/badge/platform-cloud--native-orange" alt="Platform">
-  <img src="https://img.shields.io/badge/architecture-microservices-blue" alt="Architecture">
-</p>
-
 ## 📝 Description
 
 **Medicate** is a cloud-native, AI-enabled healthcare platform that streamlines the consultation lifecycle using a microservices architecture. It bridges the gap between patients and doctors through AI-driven symptom assessment, secure video consultations, and digital prescription management. 
