@@ -31,7 +31,7 @@ export default function PaymentsPage() {
     const fetchTransactions = async () => {
       try {
         setLoading(true);
-        const response = await paymentAPI.myTransactions();
+        const response = await paymentAPI.myTransactions({ limit: 100 });
         setTransactions(response.data.data || []);
       } catch (err) {
         console.error('Failed to fetch transactions:', err);
@@ -50,7 +50,7 @@ export default function PaymentsPage() {
   );
 
   const totalSpent = transactions
-    .filter(tx => tx.status === 'succeeded')
+    .filter(tx => tx.status === 'completed')
     .reduce((acc, tx) => acc + (tx.amount / 100), 0);
 
   const pendingAmount = transactions
@@ -86,10 +86,11 @@ export default function PaymentsPage() {
     doc.text(new Date(tx.createdAt).toLocaleString(), 70, 85);
     
     doc.text(`Service:`, 20, 95);
-    doc.text(tx.description || 'Consultation', 70, 95);
+    const safeDescription = (tx.description || 'Consultation').replace(/Dr\.?\s*Dr\.?/ig, 'Dr.');
+    doc.text(safeDescription, 70, 95);
     
     doc.text(`Status:`, 20, 105);
-    if (tx.status === 'succeeded') doc.setTextColor(22, 163, 74);
+    if (tx.status === 'completed') doc.setTextColor(22, 163, 74);
     else doc.setTextColor(220, 38, 38);
     doc.text(tx.status.toUpperCase(), 70, 105);
     
@@ -208,17 +209,19 @@ export default function PaymentsPage() {
               <div className="p-2 flex flex-col md:flex-row md:items-center gap-6">
                 <div className="p-6 md:p-8 flex-1 flex items-center gap-8">
                   <div className={`w-16 h-16 rounded-3xl flex items-center justify-center transition-all duration-300 ${
-                    tx.status === 'succeeded' ? 'bg-green-500/10 text-green-600' :
+                    tx.status === 'completed' ? 'bg-green-500/10 text-green-600' :
                     tx.status === 'pending' ? 'bg-yellow-400/10 text-yellow-600' :
                     'bg-red-500/10 text-red-600'
                   }`}>
-                    {tx.status === 'succeeded' ? <CheckCircle className="w-8 h-8" /> : 
+                    {tx.status === 'completed' ? <CheckCircle className="w-8 h-8" /> : 
                      tx.status === 'pending' ? <Clock className="w-8 h-8" /> : 
                      <AlertCircle className="w-8 h-8" />}
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-3 mb-1">
-                       <h3 className="text-xl font-black tracking-tight truncate">{tx.description || 'Specialist Consultation'}</h3>
+                       <h3 className="text-xl font-black tracking-tight truncate">
+                         {(tx.description || 'Specialist Consultation').replace(/Dr\.?\s*Dr\.?/ig, 'Dr.')}
+                       </h3>
                     </div>
                     <div className="flex flex-wrap items-center gap-6 text-sm font-medium text-muted-foreground">
                        <span className="flex items-center gap-2">
@@ -239,7 +242,7 @@ export default function PaymentsPage() {
 
                 <div className="px-8 pb-8 md:pb-0 md:border-l border-border/50 flex flex-row md:flex-col items-center justify-center gap-3 min-w-[180px]">
                    <Badge className={`rounded-xl px-4 py-1.5 text-xs font-black w-full text-center border ${
-                     tx.status === 'succeeded' ? 'bg-green-500/5 text-green-600 border-green-500/20' : 
+                     tx.status === 'completed' ? 'bg-green-500/5 text-green-600 border-green-500/20' : 
                      tx.status === 'pending' ? 'bg-yellow-400/5 text-yellow-700 border-yellow-400/20' : 
                      'bg-red-500/5 text-red-600 border-red-500/20'
                    }`}>

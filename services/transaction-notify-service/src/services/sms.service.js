@@ -13,18 +13,26 @@ const twilio = require('twilio');
 
 const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID || 'ACplaceholder';
 const TWILIO_AUTH_TOKEN  = process.env.TWILIO_AUTH_TOKEN  || 'placeholder';
-const TWILIO_FROM_NUMBER = process.env.TWILIO_FROM_NUMBER || '+1234567890';
+const TWILIO_FROM_NUMBER = process.env.TWILIO_FROM_NUMBER || process.env.TWILIO_PHONE_NUMBER || '+1234567890';
 
 // Lazy-init client so missing env vars don't crash at import time
 let client = null;
 
 const getClient = () => {
   if (!client) {
-    if (!process.env.TWILIO_ACCOUNT_SID || process.env.TWILIO_ACCOUNT_SID.startsWith('AC') && process.env.TWILIO_ACCOUNT_SID !== 'ACplaceholder') {
+    const hasCreds =
+      process.env.TWILIO_ACCOUNT_SID &&
+      process.env.TWILIO_ACCOUNT_SID !== 'ACplaceholder' &&
+      process.env.TWILIO_AUTH_TOKEN  &&
+      process.env.TWILIO_AUTH_TOKEN  !== 'placeholder' &&
+      process.env.TWILIO_ACCOUNT_SID.startsWith('AC');
+
+    if (hasCreds) {
       client = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
+      console.log('[SMS] Twilio client initialised with real credentials');
     } else {
-      // Mock client for development when Twilio is not configured
-      console.warn('[SMS] Twilio not configured — SMS will be logged only');
+      // Mock client — SMS will be logged to console only until Twilio is configured
+      console.warn('[SMS] Twilio not configured — SMS will be logged only. Set TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER in .env to enable real SMS.');
       client = {
         messages: {
           create: async (params) => {

@@ -6,7 +6,7 @@ const listUsers = async (req, res, next) => {
   try {
     const { role, isActive, page = 1, limit = 20 } = req.query;
     const filter = {};
-    if (role)     filter.role = role;
+    if (role) filter.role = role;
     if (isActive !== undefined) filter.isActive = isActive === 'true';
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
@@ -144,6 +144,48 @@ const deleteUser = async (req, res, next) => {
   }
 };
 
+// ── PUT /api/admin/users/:id ──────────────────────────────────
+// Edit a user's details
+const updateUserProfile = async (req, res, next) => {
+  try {
+    const { firstName, lastName, email, role, specialty } = req.body;
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+
+    if (firstName) user.firstName = firstName;
+    if (lastName) user.lastName = lastName;
+    if (email) user.email = email;
+    if (role && ['patient', 'doctor', 'admin'].includes(role)) {
+      user.role = role;
+    }
+
+    if (user.role === 'doctor' && specialty) {
+      if (!user.doctorProfile) user.doctorProfile = {};
+      user.doctorProfile.specialty = specialty;
+    }
+
+    await user.save();
+
+    // toPublicProfile may not be defined depending on user schema, 
+    // but looking at earlier file it's used in doctor verification. 
+    // To be safe we'll send standard fields without password.
+    const userRes = user.toObject();
+    delete userRes.password;
+    delete userRes.refreshToken;
+
+    res.json({
+      success: true,
+      message: 'User profile updated successfully',
+      data: { user: userRes },
+    });
+  } catch (err) {
+    if (err.code === 11000) {
+      return res.status(400).json({ success: false, message: 'Email is already in use by another account' });
+    }
+    next(err);
+  }
+};
+
 // ── GET /api/admin/stats ─────────────────────────────────────────
 // Platform overview stats
 const getPlatformStats = async (req, res, next) => {
@@ -174,4 +216,5 @@ module.exports = {
   toggleUserStatus,
   deleteUser,
   getPlatformStats,
+  updateUserProfile,
 };

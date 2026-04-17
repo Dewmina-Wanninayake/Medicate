@@ -15,12 +15,14 @@ import {
 } from 'lucide-react';
 import { appointmentAPI, paymentAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router';
 import StripePaymentWrapper from './booking/StripePaymentWrapper';
 import PaymentForm from './booking/PaymentForm';
 import { toast } from 'sonner';
 
 export default function BookingModal({ open, onClose, doctor }) {
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   const [step, setStep] = useState(1);
   const [selectedDate, setSelectedDate] = useState('');
@@ -88,15 +90,30 @@ export default function BookingModal({ open, onClose, doctor }) {
       // 3. Create Stripe PaymentIntent via the transaction-notify-service.
       //    The frontend calls this directly with the user's own Bearer token,
       //    which carries the verified email — no service-to-service auth needed.
+      //    Stripe metadata requires all values to be plain strings, so we flatten
+      //    the phone object (e.g. { number: '772410592', countryCode: '+94' })
+      //    into a single E.164-style string.
+      const rawPhone = user.phone;
+      const patientPhone =
+        typeof rawPhone === 'string'
+          ? rawPhone
+          : rawPhone && typeof rawPhone === 'object'
+            ? `${rawPhone.countryCode || '+1'}${rawPhone.number || ''}`
+            : '+94700000000';
+
       const intentRes = await paymentAPI.createIntent({
         amount: amountCents,
         currency: 'usd',
         patientId: user._id || user.id,
         patientEmail: user.email,
         patientName: user.name || user.firstName || 'Patient',
+        patientPhone,
         doctorId: doctor._id || doctor.id,
+        doctorName: doctor.name || 'Doctor',
         appointmentId: apptId,
         description: `Consultation with Dr. ${doctor.name}`,
+        appointmentDate: selectedDate,
+        appointmentTime: selectedTime,
       });
 
       setClientSecret(intentRes.data.data.clientSecret);
@@ -113,14 +130,44 @@ export default function BookingModal({ open, onClose, doctor }) {
   };
 
   // ── After Stripe confirms payment ──────────────────────────────────
-  const handlePaymentSuccess = async () => {
+  const handlePaymentSuccess = async (paymentIntentId) => {
     // Flip appointment status to 'scheduled'.
     // This is a reliable client-side fallback for dev/Docker where Stripe
     // webhooks can't reach localhost. The webhook will also fire in production.
     try {
+      if (paymentIntentId) {
+        const rawPhone2 = user.phone;
+        const confirmPhone =
+          typeof rawPhone2 === 'string'
+            ? rawPhone2
+            : rawPhone2 && typeof rawPhone2 === 'object'
+              ? `${rawPhone2.countryCode || '+1'}${rawPhone2.number || ''}`
+              : '+94700000000';
+
+        await paymentAPI.confirmPayment({
+          paymentIntentId,
+          patientEmail: user.email,
+          patientName: user.name || user.firstName || 'Patient',
+          patientPhone: confirmPhone,
+          doctorName: doctor.name || 'Doctor',
+          appointmentDate: selectedDate,
+          appointmentTime: selectedTime
+        });
+      }
+
+      // Calculate dates for fallback client-side update
+      const [hourMinute, ampm] = selectedTime.split(' ');
+      let [hours, minutes] = hourMinute.split(':');
+      if (ampm === 'PM' && hours !== '12') hours = String(parseInt(hours) + 12);
+      if (ampm === 'AM' && hours === '12') hours = '00';
+      const startTime = new Date(`${selectedDate}T${String(hours).padStart(2, '0')}:${minutes}:00`);
+      const endTime = new Date(startTime.getTime() + 30 * 60000);
+
       await appointmentAPI.updateStatus({
         appointmentId,
         status: 'scheduled',
+        startTime,
+        endTime
       });
     } catch (err) {
       // Non-critical — the appointment will be confirmed via webhook in production
@@ -142,9 +189,14 @@ export default function BookingModal({ open, onClose, doctor }) {
     }, 400);
   };
 
+  const handleGoToDashboard = () => {
+    resetAndClose();
+    navigate('/dashboard');
+  };
+
   return (
     <Dialog open={open} onOpenChange={resetAndClose}>
-      <DialogContent className="max-w-2xl rounded-[48px] p-0 gap-0 overflow-hidden">
+      <DialogContent aria-describedby={undefined} className="max-w-2xl rounded-[48px] p-0 gap-0 overflow-hidden">
 
         {/* ── Header ─────────────────────────────────────────────── */}
         <DialogHeader className="p-8 pb-6 border-b border-border bg-gradient-to-r from-primary/5 to-accent/5">
@@ -179,9 +231,8 @@ export default function BookingModal({ open, onClose, doctor }) {
             {[1, 2, 3].map((s) => (
               <div key={s} className="flex items-center flex-1">
                 <div
-                  className={`h-2 flex-1 rounded-full transition-all duration-500 ${
-                    s <= step ? 'bg-primary' : 'bg-muted'
-                  }`}
+                  className={`h-2 flex-1 rounded-full transition-all duration-500 ${s <= step ? 'bg-primary' : 'bg-muted'
+                    }`}
                 />
                 {s < 3 && <div className="w-2" />}
               </div>
@@ -223,11 +274,10 @@ export default function BookingModal({ open, onClose, doctor }) {
                     <button
                       key={time}
                       onClick={() => setSelectedTime(time)}
-                      className={`px-4 py-3 rounded-2xl border-2 transition-all text-sm font-semibold ${
-                        selectedTime === time
+                      className={`px-4 py-3 rounded-2xl border-2 transition-all text-sm font-semibold ${selectedTime === time
                           ? 'border-primary bg-primary text-primary-foreground'
                           : 'border-border hover:border-primary/50'
-                      }`}
+                        }`}
                     >
                       {time}
                     </button>
@@ -402,7 +452,7 @@ export default function BookingModal({ open, onClose, doctor }) {
               </div>
 
               <Button
-                onClick={resetAndClose}
+                onClick={handleGoToDashboard}
                 className="w-full rounded-3xl h-12 bg-primary hover:bg-accent"
               >
                 Go to Dashboard

@@ -30,15 +30,15 @@ router.post('/',
 
 // Route to update an existing doctor's bio/info
 router.put('/:id',
-  protect, 
-  authorize('doctor'), 
+  protect,
+  authorize('doctor'),
   updateDoctorProfile
 );
 
 // Route to specifically change a doctor's working hours
 router.put('/:id/availability',
-  protect, 
-  authorize('doctor'), 
+  protect,
+  authorize('doctor'),
   updateAvailability
 );
 

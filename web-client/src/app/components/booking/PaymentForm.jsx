@@ -29,7 +29,7 @@ export default function PaymentForm({ onConfirm }) {
       setIsProcessing(false);
     } else if (paymentIntent && paymentIntent.status === 'succeeded') {
       toast.success('Payment successful! Appointment confirmed.');
-      onConfirm();
+      onConfirm(paymentIntent.id);
     }
     
     setIsProcessing(false);

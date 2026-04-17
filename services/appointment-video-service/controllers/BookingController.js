@@ -101,14 +101,23 @@ exports.bookAppointment = async (req, res) => {
 exports.confirmAppointment = async (req, res) => {
   // Logic is shared or targeted by the internal webhook logic
   try {
-    const { appointmentId, status } = req.body;
+    const { appointmentId, status, startTime, endTime } = req.body;
     const appointment = await Appointment.findById(appointmentId);
     
     if (appointment) {
       appointment.status = status || 'scheduled';
       appointment.paymentStatus = 'paid';
+      
+      // Update dates if provided (useful for rescheduling during payment)
+      if (startTime) appointment.startTime = new Date(startTime);
+      if (endTime)   appointment.endTime   = new Date(endTime);
+      
       await appointment.save();
-      await redis.del(`doctor_schedule:${appointment.doctorId}`);
+      
+      // Clear cache if exists
+      if (redis.del) {
+        await redis.del(`doctor_schedule:${appointment.doctorId}`);
+      }
     }
     
     res.status(200).json({ success: true });

@@ -70,6 +70,7 @@ const transactionSchema = new mongoose.Schema(
         'pending',
         'processing',
         'succeeded',
+        'completed',
         'failed',
         'refunded',
         'partially_refunded',

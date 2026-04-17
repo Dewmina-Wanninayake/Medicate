@@ -43,7 +43,7 @@ router.post(
   authorize('patient', 'admin'),
   [
     body('paymentIntentId').notEmpty().withMessage('paymentIntentId is required'),
-    body('paymentMethodId').notEmpty().withMessage('paymentMethodId is required'),
+    body('paymentMethodId').optional(),   // frontend Stripe.js confirms client-side; no paymentMethodId forwarded
   ],
   validate,
   ctrl.confirmStripePayment
@@ -124,6 +124,28 @@ router.get(
   [param('id').isUUID().withMessage('id must be a valid UUID')],
   validate,
   ctrl.getTransaction
+);
+
+// ─── Transactions: update status (admin) ─────────────────────────────────────
+/**
+ * PUT /api/payments/transactions/:id/status
+ * Admin only — manually adjust payment state.
+ */
+router.put(
+  '/transactions/:id/status',
+  authenticate,
+  authorize('admin'),
+  [
+    param('id').isUUID().withMessage('id must be a valid UUID'),
+    body('status')
+      .isIn([
+        'pending','processing','succeeded','completed','failed',
+        'refunded','partially_refunded','cancelled'
+      ])
+      .withMessage('Invalid status provided')
+  ],
+  validate,
+  ctrl.updateTransactionStatus
 );
 
 module.exports = router;
