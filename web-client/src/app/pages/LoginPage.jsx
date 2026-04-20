@@ -1,51 +1,58 @@
 import { useState } from 'react';
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
-import { Badge } from '../components/ui/badge';
-import { User, Stethoscope, Shield, Mail, Lock } from 'lucide-react';
+import { User, Stethoscope, Shield, Mail, Lock, AlertCircle } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 export default function LoginPage() {
+  const { login } = useAuth();
+  const navigate   = useNavigate();
+
   const [selectedRole, setSelectedRole] = useState('patient');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail]               = useState('');
+  const [password, setPassword]         = useState('');
+  const [error, setError]               = useState('');
+  const [loading, setLoading]           = useState(false);
+  const [warning, setWarning]           = useState('');
 
   const roles = [
-    {
-      type: 'patient',
-      label: 'Patient',
-      icon: User,
-      description: 'Book appointments and consultations'
-    },
-    {
-      type: 'doctor',
-      label: 'Doctor',
-      icon: Stethoscope,
-      description: 'Manage patients and appointments'
-    },
-    {
-      type: 'admin',
-      label: 'Admin',
-      icon: Shield,
-      description: 'Platform administration'
-    }
+    { type: 'patient', label: 'Patient',  icon: User,        description: 'Book appointments and consultations' },
+    { type: 'doctor',  label: 'Doctor',   icon: Stethoscope, description: 'Manage patients and appointments' },
+    { type: 'admin',   label: 'Admin',    icon: Shield,       description: 'Platform administration' },
   ];
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    // Mock login - redirect based on role
-    if (selectedRole === 'doctor' || selectedRole === 'admin') {
-      window.location.href = '/dashboard';
-    } else {
-      window.location.href = '/';
+    setError('');
+    setWarning('');
+    setLoading(true);
+
+    try {
+      const user = await login(email, password);
+
+      // Show warning for unverified doctors but still let them in
+      if (user.role === 'doctor' && !user.doctorProfile?.isVerified) {
+        setWarning('Your account is pending verification by an admin.');
+      }
+
+      // Redirect based on role
+      if (user.role === 'admin')       navigate('/admin');
+      else if (user.role === 'doctor') navigate('/dashboard');
+      else                             navigate('/');
+
+    } catch (err) {
+      setError(err.response?.data?.message || 'Login failed. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-6">
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-accent/5 to-background -z-10"></div>
-      
+
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
@@ -55,15 +62,12 @@ export default function LoginPage() {
           <p className="text-muted-foreground">Healthcare Platform Login</p>
         </div>
 
-        {/* Login Card */}
         <Card className="rounded-[48px] border-none shadow-2xl bg-card/80 backdrop-blur-lg">
           <CardHeader className="text-center pb-4">
             <CardTitle className="text-2xl">Welcome Back</CardTitle>
-            <p className="text-sm text-muted-foreground mt-2">
-              Select your role to continue
-            </p>
+            <p className="text-sm text-muted-foreground mt-2">Select your role to continue</p>
           </CardHeader>
-          
+
           <CardContent className="p-8">
             {/* Role Selection */}
             <div className="grid grid-cols-3 gap-3 mb-8">
@@ -77,16 +81,8 @@ export default function LoginPage() {
                       : 'border-border hover:border-primary/50 bg-card'
                   }`}
                 >
-                  <role.icon
-                    className={`w-6 h-6 ${
-                      selectedRole === role.type ? 'text-primary' : 'text-muted-foreground'
-                    }`}
-                  />
-                  <span
-                    className={`text-xs font-semibold ${
-                      selectedRole === role.type ? 'text-primary' : 'text-muted-foreground'
-                    }`}
-                  >
+                  <role.icon className={`w-6 h-6 ${selectedRole === role.type ? 'text-primary' : 'text-muted-foreground'}`} />
+                  <span className={`text-xs font-semibold ${selectedRole === role.type ? 'text-primary' : 'text-muted-foreground'}`}>
                     {role.label}
                   </span>
                 </button>
@@ -99,6 +95,21 @@ export default function LoginPage() {
                 {roles.find(r => r.type === selectedRole)?.description}
               </p>
             </div>
+
+            {/* Error Message */}
+            {error && (
+              <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-2xl flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />
+                <p className="text-sm text-red-600">{error}</p>
+              </div>
+            )}
+
+            {/* Warning Message */}
+            {warning && (
+              <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-2xl">
+                <p className="text-sm text-yellow-700">{warning}</p>
+              </div>
+            )}
 
             {/* Login Form */}
             <form onSubmit={handleLogin} className="space-y-4">
@@ -131,16 +142,15 @@ export default function LoginPage() {
                   <input type="checkbox" className="rounded" />
                   <span className="text-muted-foreground">Remember me</span>
                 </label>
-                <a href="#" className="text-primary hover:underline">
-                  Forgot password?
-                </a>
+                <a href="#" className="text-primary hover:underline">Forgot password?</a>
               </div>
 
               <Button
                 type="submit"
+                disabled={loading}
                 className="w-full rounded-3xl h-12 bg-primary hover:bg-accent text-lg"
               >
-                Sign In
+                {loading ? 'Signing in...' : 'Sign In'}
               </Button>
             </form>
 
@@ -151,32 +161,16 @@ export default function LoginPage() {
               <div className="flex-1 h-px bg-border"></div>
             </div>
 
-            {/* Social Login */}
-            <div className="space-y-3">
-              <Button
-                variant="outline"
-                className="w-full rounded-3xl h-12 justify-start gap-3"
-              >
-                <img
-                  src="https://www.google.com/favicon.ico"
-                  alt="Google"
-                  className="w-5 h-5"
-                />
-                Continue with Google
-              </Button>
-            </div>
-
             {/* Sign Up Link */}
-            <div className="mt-8 text-center text-sm text-muted-foreground">
+            <div className="mt-4 text-center text-sm text-muted-foreground">
               Don't have an account?{' '}
-              <a href="#" className="text-primary font-semibold hover:underline">
+              <Link to="/register" className="text-primary font-semibold hover:underline">
                 Sign up
-              </a>
+              </Link>
             </div>
           </CardContent>
         </Card>
 
-        {/* Back to Home */}
         <div className="text-center mt-6">
           <Link to="/" className="text-sm text-muted-foreground hover:text-primary">
             ← Back to Home

@@ -1,20 +1,13 @@
-# Node modules
-node_modules/
+# Ignore environment files and sensitive data
+*.env
+*.key
+*.pem
+secrets.json
+config.local.*
 
-# Environment variables
-.env
+# Ignore secret YAML files - never commit actual secrets to repo
+*-secret.yaml
+*-secrets.yaml
 
-# Logs
-*.log
-
-# Build outputs
-dist/
-build/
-
-# IDE files
-.vscode/
-.idea/
-
-# OS files
-.DS_Store
-Thumbs.db
+# Kubernetes manifests
+k8s/

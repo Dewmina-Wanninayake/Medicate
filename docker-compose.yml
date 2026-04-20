@@ -1,48 +1,153 @@
 version: '3.8'
-
 services:
-  backend:
+
+  user-identity-service:
     build:
-      context: .
+      context: ./services/user-identity-service
       dockerfile: Dockerfile
-    container_name: healthiest-app-backend
+    container_name: medicate-user-identity
     ports:
-      - "5000:5000"
+      - "3001:3001"
     environment:
       - NODE_ENV=development
-      - MONGODB_URI=mongodb://mongodb:27017/healthiest-app
+      - PORT=3001
+      - MONGO_URI=mongodb://mongodb:27017/medicate_users
+      - JWT_SECRET=${JWT_SECRET:-your-super-secret-jwt-key-please-change-in-production}
+      - JWT_EXPIRES_IN=15m
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET:-your-super-secret-refresh-key-please-change-in-production}
+      - JWT_REFRESH_EXPIRES_IN=7d
     depends_on:
-      - mongodb
-    volumes:
-      - .:/app
-      - /app/node_modules
+      mongodb:
+        condition: service_healthy
     restart: unless-stopped
     networks:
-      - healthiest-network
+      - medicate-network
+
+  appointment-service:
+    build:
+      context: ./services/appointment-video-service
+      dockerfile: Dockerfile
+    container_name: medicate-appointment-service
+    ports:
+      - "5004:5003"
+    environment:
+      - PORT=5003
+      - MONGO_URI=mongodb://mongodb:27017/medicate_appointments
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=
+      - AGORA_APP_ID=e7f6e9aeecf14b2ba10e3f40be9f56e7
+      - AGORA_APP_CERTIFICATE=fb90ec88697e43a489af7be085b3ea59
+    restart: on-failure
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - medicate-network
+
+  # Clinical Medical Service
+  clinical-medical-service:
+    build:
+      context: ./services/clinical-medical-service
+      dockerfile: Dockerfile
+    container_name: medicate-clinical-medical-service
+    ports:
+      - "5001:5000"
+    environment:
+      - PORT=5000
+      - MONGO_URI=mongodb://mongodb:27017/medicate_clinical
+      - NODE_ENV=production
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-sk-placeholder-key}
+      - CLOUDINARY_API_KEY=${CLOUDINARY_API_KEY:-}
+      - CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET:-}
+      - CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME:-}
+    restart: on-failure
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - medicate-network
+
+  # Transaction & Notification Service
+  transaction-notify-service:
+    build:
+      context: ./services/transaction-notify-service
+      dockerfile: Dockerfile
+    container_name: medicate-transaction-notify-service
+    ports:
+      - "3004:3003"
+    environment:
+      - PORT=3003
+      - MONGODB_URI=mongodb://mongodb:27017/medicate_transactions
+      - NODE_ENV=production
+      - STRIPE_API_KEY=${STRIPE_API_KEY:-sk_test_placeholder}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET:-whsec_placeholder}
+      - NODEMAILER_EMAIL=${NODEMAILER_EMAIL:-noreply@medicate.com}
+      - NODEMAILER_PASSWORD=${NODEMAILER_PASSWORD:-}
+      - TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID:-}
+      - TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN:-}
+      - TWILIO_PHONE_NUMBER=${TWILIO_PHONE_NUMBER:-}
+    restart: on-failure
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - medicate-network
+
+  # Frontend React Client
+  web-client:
+    build:
+      context: ./web-client
+      dockerfile: Dockerfile
+    container_name: medicate-web-client
+    ports:
+      - "3000:80"
+    environment:
+      - VITE_APPOINTMENT_SERVICE_URL=http://localhost:5004
+      - VITE_CLINICAL_SERVICE_URL=http://localhost:5001
+      - VITE_TRANSACTION_SERVICE_URL=http://localhost:3004
+    depends_on:
+      - appointment-service
+      - clinical-medical-service
+      - transaction-notify-service
+    networks:
+      - medicate-network
 
   mongodb:
-    image: mongo:7-alpine
-    container_name: healthiest-app-mongodb
+    image: mongo:7
+    container_name: medicate-mongodb
     ports:
       - "27017:27017"
-    environment:
-      - MONGO_INITDB_ROOT_USERNAME=admin
-      - MONGO_INITDB_ROOT_PASSWORD=admin123
-      - MONGO_INITDB_DATABASE=healthiest-app
     volumes:
-      - mongodb-data:/data/db
-    restart: unless-stopped
+      - mongodb_data:/data/db
     networks:
-      - healthiest-network
+      - medicate-network
     healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 15s
 
-volumes:
-  mongodb-data:
+  redis:
+    image: redis:alpine
+    container_name: medicate-redis
+    ports:
+      - "6380:6379"
+    networks:
+      - medicate-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
 networks:
-  healthiest-network:
+  medicate-network:
     driver: bridge
+
+volumes:
+  mongodb_data:
