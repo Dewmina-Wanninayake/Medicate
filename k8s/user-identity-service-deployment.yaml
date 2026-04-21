@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: C:\Users\USER\Desktop\healthcare-microservices\services\kompose.exe convert -f docker-compose.yml -o k8s/
+    kompose.version: 1.32.0 (765fde254)
+  labels:
+    io.kompose.service: user-identity-service
+  name: user-identity-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: user-identity-service
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: C:\Users\USER\Desktop\healthcare-microservices\services\kompose.exe convert -f docker-compose.yml -o k8s/
+        kompose.version: 1.32.0 (765fde254)
+      labels:
+        io.kompose.network/services-healthcare-net: "true"
+        io.kompose.service: user-identity-service
+    spec:
+      containers:
+        - env:
+            - name: JWT_EXPIRES_IN
+              value: 7d
+            - name: JWT_SECRET
+              value: supersecretkey_change_in_prod
+            - name: MONGO_URI
+              value: mongodb://mongo-user:27017/user-identity-db
+            - name: PORT
+              value: "3001"
+          image: services-user-identity-service:latest
+          imagePullPolicy: IfNotPresent
+          name: user-identity-service
+      restartPolicy: Always

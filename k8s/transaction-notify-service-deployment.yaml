@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: C:\Users\USER\Desktop\healthcare-microservices\services\kompose.exe convert -f docker-compose.yml -o k8s/
+    kompose.version: 1.32.0 (765fde254)
+  labels:
+    io.kompose.service: transaction-notify-service
+  name: transaction-notify-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: transaction-notify-service
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: C:\Users\USER\Desktop\healthcare-microservices\services\kompose.exe convert -f docker-compose.yml -o k8s/
+        kompose.version: 1.32.0 (765fde254)
+      labels:
+        io.kompose.network/services-healthcare-net: "true"
+        io.kompose.service: transaction-notify-service
+    spec:
+      containers:
+        - env:
+            - name: EMAIL_FROM
+              value: noreply@healthcare.local
+            - name: MONGO_URI
+              value: mongodb://mongo-transaction:27017/transaction-notify-db
+            - name: PORT
+              value: "3004"
+            - name: SMTP_HOST
+              value: smtp.mailtrap.io
+            - name: SMTP_PASS
+            - name: SMTP_PORT
+              value: "587"
+            - name: SMTP_USER
+            - name: STRIPE_SECRET_KEY
+              value: sk_test_placeholder
+            - name: STRIPE_WEBHOOK_SECRET
+              value: whsec_placeholder
+            - name: TWILIO_ACCOUNT_SID
+            - name: TWILIO_AUTH_TOKEN
+            - name: TWILIO_PHONE_NUMBER
+          image: services-transaction-notify-service:latest
+          imagePullPolicy: IfNotPresent
+          name: transaction-notify-service
+      restartPolicy: Always

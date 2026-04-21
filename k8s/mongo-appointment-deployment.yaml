@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: C:\Users\USER\Desktop\healthcare-microservices\services\kompose.exe convert -f docker-compose.yml -o k8s/
+    kompose.version: 1.32.0 (765fde254)
+  labels:
+    io.kompose.service: mongo-appointment
+  name: mongo-appointment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: mongo-appointment
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: C:\Users\USER\Desktop\healthcare-microservices\services\kompose.exe convert -f docker-compose.yml -o k8s/
+        kompose.version: 1.32.0 (765fde254)
+      labels:
+        io.kompose.network/services-healthcare-net: "true"
+        io.kompose.service: mongo-appointment
+    spec:
+      containers:
+        - image: mongo:7
+          name: mongo-appointment
+          volumeMounts:
+            - mountPath: /data/db
+              name: mongo-appointment-data
+      restartPolicy: Always
+      volumes:
+        - name: mongo-appointment-data
+          persistentVolumeClaim:
+            claimName: mongo-appointment-data

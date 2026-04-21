@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongo-ai
+  namespace: healthcare
+  labels:
+    io.kompose.service: mongo-ai
+spec:
+  selector:
+    io.kompose.service: mongo-ai
+  ports:
+    - port: 27017
+      targetPort: 27017
+  clusterIP: None

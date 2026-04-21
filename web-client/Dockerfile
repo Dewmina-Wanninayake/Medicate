@@ -1,25 +1,17 @@
-# Stage 1: Build the Vite app
-FROM node:18-alpine AS build
-
+# Stage 1 — build
+FROM node:20-alpine AS builder
 WORKDIR /app
-
 COPY package*.json ./
-RUN npm install
-
+RUN npm ci
 COPY . .
-ARG VITE_STRIPE_PUBLISHABLE_KEY
-ENV VITE_STRIPE_PUBLISHABLE_KEY=$VITE_STRIPE_PUBLISHABLE_KEY
+ARG VITE_API_URL=http://localhost:3000
+ENV VITE_API_URL=$VITE_API_URL
 RUN npm run build
 
-# Stage 2: Serve the app using Nginx
+# Stage 2 — serve with nginx
 FROM nginx:alpine
-
-# Copy the build output to the Nginx html directory
-COPY --from=build /app/dist /usr/share/nginx/html
-
-# Copy custom Nginx config if needed, otherwise use default
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-
+COPY --from=builder /app/dist /usr/share/nginx/html
+# SPA fallback: all 404s → index.html
+RUN printf 'server {\n  listen 80;\n  location / {\n    root /usr/share/nginx/html;\n    try_files $uri $uri/ /index.html;\n  }\n}\n' > /etc/nginx/conf.d/default.conf
 EXPOSE 80
-
 CMD ["nginx", "-g", "daemon off;"]

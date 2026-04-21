@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: C:\Users\USER\Desktop\healthcare-microservices\services\kompose.exe convert -f docker-compose.yml -o k8s/
+    kompose.version: 1.32.0 (765fde254)
+  labels:
+    io.kompose.service: mongo-ai
+  name: mongo-ai
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: mongo-ai
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: C:\Users\USER\Desktop\healthcare-microservices\services\kompose.exe convert -f docker-compose.yml -o k8s/
+        kompose.version: 1.32.0 (765fde254)
+      labels:
+        io.kompose.network/services-healthcare-net: "true"
+        io.kompose.service: mongo-ai
+    spec:
+      containers:
+        - image: mongo:7
+          name: mongo-ai
+          volumeMounts:
+            - mountPath: /data/db
+              name: mongo-ai-data
+      restartPolicy: Always
+      volumes:
+        - name: mongo-ai-data
+          persistentVolumeClaim:
+            claimName: mongo-ai-data

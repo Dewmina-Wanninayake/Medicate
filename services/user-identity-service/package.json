@@ -1,30 +1,23 @@
 {
   "name": "user-identity-service",
   "version": "1.0.0",
-  "description": "User & Identity Microservice for Medicate Platform – handles auth, RBAC, and user management",
+  "description": "Handles Patient, Doctor, Admin auth and profile management",
   "main": "src/index.js",
   "scripts": {
-    "start":       "node src/index.js",
-    "dev":         "nodemon src/index.js",
-    "seed:admin":  "node src/scripts/seed-admin.js",
-    "test":        "jest --forceExit --detectOpenHandles"
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js"
   },
   "dependencies": {
-    "bcryptjs":          "^2.4.3",
-    "cors":              "^2.8.5",
-    "dotenv":            "^16.4.5",
-    "express":           "^4.19.2",
-    "express-validator": "^7.1.0",
-    "helmet":            "^7.1.0",
-    "jsonwebtoken":      "^9.0.2",
-    "mongoose":          "^8.4.1",
-    "morgan":            "^1.10.0",
-    "passport":          "^0.7.0",
-    "passport-jwt":      "^4.0.1"
+    "express": "^4.18.2",
+    "mongoose": "^8.0.3",
+    "jsonwebtoken": "^9.0.2",
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.3.1",
+    "cors": "^2.8.5",
+    "morgan": "^1.10.0",
+    "multer": "^1.4.5-lts.1"
   },
   "devDependencies": {
-    "jest":      "^29.7.0",
-    "nodemon":   "^3.1.3",
-    "supertest": "^7.0.0"
+    "nodemon": "^3.0.1"
   }
 }

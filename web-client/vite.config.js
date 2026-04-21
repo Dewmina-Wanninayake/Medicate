@@ -1,35 +1,17 @@
 import { defineConfig } from 'vite'
-import path from 'path'
-import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
+import tailwindcss from '@tailwindcss/vite'
 
+// https://vite.dev/config/
 export default defineConfig({
-  plugins: [
-    // The React and Tailwind plugins are both required for Make, even if
-    // Tailwind is not being actively used – do not remove them
-    react({
-      babel: {
-        parserOpts: {
-          plugins: ['typescript', 'jsx'],
-        },
+  plugins: [react(), tailwindcss()],
+  server: {
+    port: 5173,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
       },
-    }),
-    tailwindcss(),
-  ],
-  esbuild: {
-    loader: 'tsx',
-  },
-  resolve: {
-    alias: {
-      // Alias @ to the src directory
-      '@': path.resolve(__dirname, './src'),
     },
   },
-  server: {
-    host: '0.0.0.0',
-    port: 5173,
-  },
-
-  // File types to support raw imports. Never add .css, .jsx, or .js files to this.
-  assetsInclude: ['**/*.svg', '**/*.csv'],
 })

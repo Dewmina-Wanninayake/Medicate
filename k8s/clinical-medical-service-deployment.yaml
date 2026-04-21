@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: C:\Users\USER\Desktop\healthcare-microservices\services\kompose.exe convert -f docker-compose.yml -o k8s/
+    kompose.version: 1.32.0 (765fde254)
+  labels:
+    io.kompose.service: clinical-medical-service
+  name: clinical-medical-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: clinical-medical-service
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: C:\Users\USER\Desktop\healthcare-microservices\services\kompose.exe convert -f docker-compose.yml -o k8s/
+        kompose.version: 1.32.0 (765fde254)
+      labels:
+        io.kompose.network/services-healthcare-net: "true"
+        io.kompose.service: clinical-medical-service
+    spec:
+      containers:
+        - env:
+            - name: MONGO_URI
+              value: mongodb://mongo-clinical:27017/clinical-medical-db
+            - name: PORT
+              value: "3002"
+            - name: UPLOAD_DIR
+              value: /app/uploads
+          image: services-clinical-medical-service:latest
+          imagePullPolicy: IfNotPresent
+          name: clinical-medical-service
+          volumeMounts:
+            - mountPath: /app/uploads
+              name: clinical-uploads
+      restartPolicy: Always
+      volumes:
+        - name: clinical-uploads
+          persistentVolumeClaim:
+            claimName: clinical-uploads

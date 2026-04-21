@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongo-appointment
+  namespace: healthcare
+  labels:
+    io.kompose.service: mongo-appointment
+spec:
+  selector:
+    io.kompose.service: mongo-appointment
+  ports:
+    - port: 27017
+      targetPort: 27017
+  clusterIP: None

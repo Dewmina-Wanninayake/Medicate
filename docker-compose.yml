@@ -1,187 +1,182 @@
-version: '3.8'
-
 services:
 
-  user-identity-service:
-    build:
-      context: ./services/user-identity-service
-      dockerfile: Dockerfile
-    container_name: medicate-user-identity
+  # ─── MongoDB instances (one per service) ───────────────────────────────────
+
+  mongo-user:
+    image: mongo:7
+    container_name: mongo-user
     volumes:
-      - ./services/user-identity-service:/app
-      - /app/node_modules
-    command: npx nodemon src/index.js
+      - mongo-user-data:/data/db
+    networks:
+      - healthcare-net
+
+  mongo-clinical:
+    image: mongo:7
+    container_name: mongo-clinical
+    volumes:
+      - mongo-clinical-data:/data/db
+    networks:
+      - healthcare-net
+
+  mongo-appointment:
+    image: mongo:7
+    container_name: mongo-appointment
+    volumes:
+      - mongo-appointment-data:/data/db
+    networks:
+      - healthcare-net
+
+  mongo-transaction:
+    image: mongo:7
+    container_name: mongo-transaction
+    volumes:
+      - mongo-transaction-data:/data/db
+    networks:
+      - healthcare-net
+
+  mongo-ai:
+    image: mongo:7
+    container_name: mongo-ai
+    volumes:
+      - mongo-ai-data:/data/db
+    networks:
+      - healthcare-net
+
+  # ─── Redis (session cache for appointment-video-service) ──────────────────
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis-data:/data
+    networks:
+      - healthcare-net
+
+  # ─── Microservices ──────────────────────────────────────────────────────────
+
+  user-identity-service:
+    build: ./services/user-identity-service
+    container_name: user-identity-service
     ports:
       - "3001:3001"
     environment:
-      - NODE_ENV=development
-      - PORT=3001
-      - MONGO_URI=mongodb://mongodb:27017/medicate_users
-      - JWT_SECRET=${JWT_SECRET}
-      - JWT_EXPIRES_IN=15m
-      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
-      - JWT_REFRESH_EXPIRES_IN=7d
+      PORT: 3001
+      MONGO_URI: mongodb://mongo-user:27017/user-identity-db
+      JWT_SECRET: ${JWT_SECRET:-supersecretkey_change_in_prod}
+      JWT_EXPIRES_IN: 7d
     depends_on:
-      mongodb:
-        condition: service_healthy
-    restart: unless-stopped
+      - mongo-user
     networks:
-      - medicate-network
-
-  appointment-service:
-    build:
-      context: ./services/appointment-video-service
-      dockerfile: Dockerfile
-    container_name: medicate-appointment-service
-    volumes:
-      - ./services/appointment-video-service:/app
-      - /app/node_modules
-    command: npx nodemon src/index.js
-    ports:
-      - "5004:5003"
-    environment:
-      - PORT=5003
-      - MONGO_URI=mongodb://mongodb:27017/medicate_appointments
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-      - REDIS_PASSWORD=
-      - AGORA_APP_ID=${AGORA_APP_ID}
-      - AGORA_APP_CERTIFICATE=${AGORA_APP_CERTIFICATE}
-      - JWT_SECRET=${JWT_SECRET}
-    depends_on:
-      mongodb:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    restart: unless-stopped
-    networks:
-      - medicate-network
+      - healthcare-net
 
   clinical-medical-service:
-    build:
-      context: ./services/clinical-medical-service
-      dockerfile: Dockerfile
-    container_name: medicate-clinical-medical-service
-    volumes:
-      - ./services/clinical-medical-service:/app
-      - /app/node_modules
-    command: npx nodemon src/index.js
-    ports:
-      - "5001:5000"
+    build: ./services/clinical-medical-service
+    container_name: clinical-medical-service
     environment:
-      - PORT=5000
-      - MONGO_URI=mongodb://mongodb:27017/medicate_clinical
-      - NODE_ENV=development
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - CLOUDINARY_API_KEY=${CLOUDINARY_API_KEY}
-      - CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET}
-      - CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME}
+      PORT: 3002
+      MONGO_URI: mongodb://mongo-clinical:27017/clinical-medical-db
+      UPLOAD_DIR: /app/uploads
+    volumes:
+      - clinical-uploads:/app/uploads
     depends_on:
-      mongodb:
-        condition: service_healthy
-    restart: unless-stopped
+      - mongo-clinical
     networks:
-      - medicate-network
+      - healthcare-net
+
+  appointment-video-service:
+    build: ./services/appointment-video-service
+    container_name: appointment-video-service
+    environment:
+      PORT: 3003
+      MONGO_URI: mongodb://mongo-appointment:27017/appointment-video-db
+      AGORA_APP_ID: ${AGORA_APP_ID:-}
+      AGORA_APP_CERTIFICATE: ${AGORA_APP_CERTIFICATE:-}
+      AGORA_TOKEN_EXPIRY: ${AGORA_TOKEN_EXPIRY:-3600}
+      TRANSACTION_NOTIFY_SERVICE_URL: http://transaction-notify-service:3004
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      - mongo-appointment
+      - redis
+    networks:
+      - healthcare-net
 
   transaction-notify-service:
-    build:
-      context: ./services/transaction-notify-service
-      dockerfile: Dockerfile
-    container_name: medicate-transaction-notify-service
-    volumes:
-      - ./services/transaction-notify-service:/app
-      - /app/node_modules
-    command: npx nodemon src/index.js
-    ports:
-      - "3004:3003"
+    build: ./services/transaction-notify-service
+    container_name: transaction-notify-service
     environment:
-      - PORT=3003
-      - MONGODB_URI=mongodb://mongodb:27017/medicate_transactions
-      - NODE_ENV=development
-      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
-      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
-      - NODEMAILER_EMAIL=${NODEMAILER_EMAIL}
-      - NODEMAILER_PASSWORD=${NODEMAILER_PASSWORD}
-      - TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID}
-      - TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN}
-      - TWILIO_PHONE_NUMBER=${TWILIO_PHONE_NUMBER}
-      - JWT_SECRET=${JWT_SECRET}
-      - JWT_ISSUER=medicate-user-identity-service
-      - JWT_AUDIENCE=medicate-platform
+      PORT: 3004
+      MONGO_URI: mongodb://mongo-transaction:27017/transaction-notify-db
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-sk_test_placeholder}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-whsec_placeholder}
+      SMTP_HOST: ${SMTP_HOST:-smtp.mailtrap.io}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      EMAIL_FROM: ${EMAIL_FROM:-noreply@healthcare.local}
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:-}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:-}
+      TWILIO_PHONE_NUMBER: ${TWILIO_PHONE_NUMBER:-}
     depends_on:
-      mongodb:
-        condition: service_healthy
-    restart: unless-stopped
+      - mongo-transaction
     networks:
-      - medicate-network
+      - healthcare-net
 
-  web-client:
-    build:
-      context: ./web-client
-      dockerfile: Dockerfile
-      target: build
-      args:
-        - VITE_STRIPE_PUBLISHABLE_KEY=${VITE_STRIPE_PUBLISHABLE_KEY}
-    container_name: medicate-web-client
-    volumes:
-      - ./web-client:/app
-      - /app/node_modules
-    command: npx vite --host 0.0.0.0 --port 5173
-    ports:
-      - "5173:5173"
+  ai-symptom-checker-service:
+    build: ./services/ai-symptom-checker-service
+    container_name: ai-symptom-checker-service
     environment:
-      - VITE_USER_SERVICE_URL=http://localhost:3001/api
-      - VITE_APPOINTMENT_SERVICE_URL=http://localhost:5004/api
-      - VITE_CLINICAL_SERVICE_URL=http://localhost:5001/api
-      - VITE_TRANSACTION_SERVICE_URL=http://localhost:3004/api
-      - VITE_STRIPE_PUBLISHABLE_KEY=${VITE_STRIPE_PUBLISHABLE_KEY}
+      PORT: 3005
+      MONGO_URI: mongodb://mongo-ai:27017/ai-symptom-db
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+    depends_on:
+      - mongo-ai
+    networks:
+      - healthcare-net
+
+  api-gateway:
+    build: ./services/api-gateway
+    container_name: api-gateway
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: 3000
+      JWT_SECRET: ${JWT_SECRET:-supersecretkey_change_in_prod}
+      USER_IDENTITY_SERVICE_URL: http://user-identity-service:3001
+      CLINICAL_MEDICAL_SERVICE_URL: http://clinical-medical-service:3002
+      APPOINTMENT_VIDEO_SERVICE_URL: http://appointment-video-service:3003
+      TRANSACTION_NOTIFY_SERVICE_URL: http://transaction-notify-service:3004
+      AI_SYMPTOM_CHECKER_SERVICE_URL: http://ai-symptom-checker-service:3005
     depends_on:
       - user-identity-service
-      - appointment-service
       - clinical-medical-service
+      - appointment-video-service
       - transaction-notify-service
-    restart: unless-stopped
+      - ai-symptom-checker-service
     networks:
-      - medicate-network
+      - healthcare-net
 
-  mongodb:
-    image: mongo:7
-    container_name: medicate-mongodb
+  # ─── Web Client (React Frontend) ───────────────────────────────────────────
+
+  web-client:
+    build: ./web-client
+    container_name: web-client
     ports:
-      - "27017:27017"
-    volumes:
-      - mongodb_data:/data/db
-    restart: unless-stopped
+      - "5173:80"
+    depends_on:
+      - api-gateway
     networks:
-      - medicate-network
-    healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 15s
-
-  redis:
-    image: redis:alpine
-    container_name: medicate-redis
-    ports:
-      - "6380:6379"
-    volumes:
-      - redis_data:/data
-    restart: unless-stopped
-    networks:
-      - medicate-network
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
-
-networks:
-  medicate-network:
-    driver: bridge
+      - healthcare-net
 
 volumes:
-  mongodb_data:
-  redis_data:
+  mongo-user-data:
+  mongo-clinical-data:
+  mongo-appointment-data:
+  mongo-transaction-data:
+  redis-data:
+  mongo-ai-data:
+  clinical-uploads:
+
+networks:
+  healthcare-net:
+    driver: bridge

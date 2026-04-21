@@ -1,19 +1,30 @@
-/**
- * transaction-notify-service — Entry Point
- * Medicate Smart Healthcare Platform — Member 4
- *
- * Responsibilities:
- *  - Payment processing  : Stripe (card payments)
- *  - Notifications       : Email (Nodemailer/SMTP) + SMS (Twilio)
- *  - JWT Auth middleware  : Patient | Doctor | Admin role guards
- */
-
 require('dotenv').config();
-const app = require('./app');
+const express = require('express');
+const cors = require('cors');
+const morgan = require('morgan');
+const connectDB = require('./config/db');
+const routes = require('./routes');
+const paymentCtrl = require('./controllers/paymentController');
 
-const PORT = process.env.PORT || 3003;
+const app = express();
+connectDB();
 
-app.listen(PORT, () => {
-  console.log(`[transaction-notify-service] Running on port ${PORT}`);
-  console.log(`[transaction-notify-service] Environment: ${process.env.NODE_ENV || 'development'}`);
-});
+app.use(cors());
+app.use(morgan('dev'));
+
+// Stripe webhook needs raw body — must be registered BEFORE express.json()
+app.post(
+  '/api/payments/webhook',
+  express.raw({ type: 'application/json' }),
+  paymentCtrl.handleWebhook
+);
+
+app.use(express.json());
+
+app.use('/api', routes);
+
+app.get('/health', (req, res) => res.json({ status: 'transaction-notify-service OK' }));
+app.use((req, res) => res.status(404).json({ error: 'Not found' }));
+
+const PORT = process.env.PORT || 3004;
+app.listen(PORT, () => console.log(`Transaction Notify Service running on port ${PORT}`));

@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: C:\Users\USER\Desktop\healthcare-microservices\services\kompose.exe convert -f docker-compose.yml -o k8s/
+    kompose.version: 1.32.0 (765fde254)
+  labels:
+    io.kompose.service: appointment-video-service
+  name: appointment-video-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: appointment-video-service
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: C:\Users\USER\Desktop\healthcare-microservices\services\kompose.exe convert -f docker-compose.yml -o k8s/
+        kompose.version: 1.32.0 (765fde254)
+      labels:
+        io.kompose.network/services-healthcare-net: "true"
+        io.kompose.service: appointment-video-service
+    spec:
+      containers:
+        - env:
+            - name: AGORA_APP_CERTIFICATE
+            - name: AGORA_APP_ID
+            - name: AGORA_TOKEN_EXPIRY
+              value: "3600"
+            - name: MONGO_URI
+              value: mongodb://mongo-appointment:27017/appointment-video-db
+            - name: PORT
+              value: "3003"
+            - name: REDIS_URL
+              value: redis://redis:6379
+            - name: TRANSACTION_NOTIFY_SERVICE_URL
+              value: http://transaction-notify-service:3004
+          image: services-appointment-video-service:latest
+          imagePullPolicy: IfNotPresent
+          name: appointment-video-service
+      restartPolicy: Always

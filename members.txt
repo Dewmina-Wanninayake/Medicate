@@ -1,6 +1,0 @@
-# Group Members
-
-- Member 1: User Identity Service
-- Member 2: Clinical Medical Service
-- Member 3: Appointment Video Service
-- Member 4: Transaction Notify Service
