@@ -4,7 +4,7 @@ import { Outlet, useNavigate } from 'react-router';
 import {
   LayoutDashboard, Calendar, Users, Bell, User,
   Shield, Activity, Settings, Home, FileText,
-  FolderOpen, Pill, DollarSign, Video, Clock
+  FolderOpen, Pill, DollarSign, Video, Clock, Search
 } from 'lucide-react';
 import Header from './Header';
 import Sidebar from './Sidebar';
@@ -13,6 +13,7 @@ import { useAuth } from '../../context/AuthContext';
 const patientNav = [
   { name: 'Home',           href: '/',                 icon: Home },
   { name: 'Dashboard',      href: '/dashboard',        icon: LayoutDashboard },
+  { name: 'Find Doctors',   href: '/find-doctors',     icon: Search },
   { name: 'Appointments',   href: '/appointments',     icon: Calendar },
   { name: 'My Records',     href: '/records',          icon: FolderOpen },
   { name: 'Prescriptions',  href: '/prescriptions',    icon: Pill },

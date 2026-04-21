@@ -19,6 +19,7 @@ import PatientsPage from './pages/PatientsPage';
 import TelemedicinePage from './pages/TelemedicinePage';
 import ProfilePage from './pages/ProfilePage';
 import NotificationsPage from './pages/NotificationsPage';
+import FindDoctorsPage from './pages/FindDoctorsPage';
 import PlaceholderPage from './pages/PlaceholderPage';
 
 export default function App() {
@@ -56,6 +57,7 @@ export default function App() {
             <Route path="/telemedicine" element={<ProtectedRoute><TelemedicinePage /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
             <Route path="/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
+            <Route path="/find-doctors" element={<ProtectedRoute><FindDoctorsPage /></ProtectedRoute>} />
             
             <Route path="/schedule" element={<ProtectedRoute><PlaceholderPage /></ProtectedRoute>} />
             <Route path="/messages" element={<ProtectedRoute><PlaceholderPage /></ProtectedRoute>} />
