@@ -32,13 +32,13 @@ const proxyOptions = (target) => ({
 
 
 
-// Route: /api/auth/** and /api/users/** → user-identity-service
+// Route: /api/auth/**, /api/users/**, and /api/doctors/** → user-identity-service
 app.use('/api/auth', createProxyMiddleware(proxyOptions(USER_IDENTITY_SERVICE_URL)));
 app.use('/api/users', createProxyMiddleware(proxyOptions(USER_IDENTITY_SERVICE_URL)));
+app.use('/api/doctors', createProxyMiddleware(proxyOptions(USER_IDENTITY_SERVICE_URL)));
 app.use('/api/admin', createProxyMiddleware(proxyOptions(USER_IDENTITY_SERVICE_URL)));
 
-// Route: /api/doctors/** and /api/records/** → clinical-medical-service
-app.use('/api/doctors', createProxyMiddleware(proxyOptions(CLINICAL_MEDICAL_SERVICE_URL)));
+// Route: /api/records/** and /api/prescriptions/** → clinical-medical-service
 app.use('/api/records', createProxyMiddleware(proxyOptions(CLINICAL_MEDICAL_SERVICE_URL)));
 app.use('/api/prescriptions', createProxyMiddleware(proxyOptions(CLINICAL_MEDICAL_SERVICE_URL)));
 

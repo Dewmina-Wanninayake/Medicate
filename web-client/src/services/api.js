@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -71,6 +71,9 @@ export const appointmentsAPI = {
     api.patch(`/api/appointments/${id}/status`, { status, ...extra }).then((r) => r.data),
   cancel: (id, cancellationReason) =>
     api.delete(`/api/appointments/${id}`, { data: { cancellationReason } }).then((r) => r.data),
+  getDoctorAvailability: (doctorId) => api.get(`/api/appointments/doctor/${doctorId}/availability`).then((r) => r.data),
+  addChat: (id, message) =>
+    api.post(`/api/appointments/${id}/chat`, { message }).then((r) => r.data),
 };
 
 // ── Sessions ──────────────────────────────────────────────────────────────────

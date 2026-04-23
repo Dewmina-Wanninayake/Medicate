@@ -9,10 +9,9 @@ import { User, Mail, Phone, Lock, Camera, CheckCircle, AlertCircle, Shield } fro
 export default function ProfilePage() {
   const { user } = useAuth();
   const [form, setForm] = useState({
-    firstName: user?.firstName || 'John',
-    lastName: user?.lastName || 'Doe',
-    email: user?.email || 'john.doe@example.com',
-    phone: '+94 77 123 4567',
+    name: user?.name || 'User Name',
+    email: user?.email || 'user@example.com',
+    phone: user?.phone || 'Not set',
   });
   const [success, setSuccess] = useState('');
 
@@ -27,8 +26,8 @@ export default function ProfilePage() {
       <div className="flex items-center gap-6 p-8 bg-gradient-to-r from-primary/10 to-accent/10 rounded-[40px]">
         <div className="relative group">
           <div className="w-24 h-24 rounded-full bg-primary/20 flex items-center justify-center border-4 border-white shadow-xl overflow-hidden">
-            {user?.firstName ? (
-              <span className="text-3xl font-bold text-primary">{user.firstName.charAt(0)}{user.lastName?.charAt(0)}</span>
+            {user?.name ? (
+              <span className="text-3xl font-bold text-primary">{user.name.charAt(0)}</span>
             ) : (
               <User className="w-12 h-12 text-primary" />
             )}
@@ -38,7 +37,7 @@ export default function ProfilePage() {
           </button>
         </div>
         <div>
-          <h1 className="text-3xl font-black">{form.firstName} {form.lastName}</h1>
+          <h1 className="text-3xl font-black">{form.name}</h1>
           <div className="flex items-center gap-2 mt-1">
             <Badge variant="secondary" className="rounded-full capitalize">{user?.role || 'Patient'}</Badge>
             {user?.role === 'doctor' && (
@@ -65,14 +64,11 @@ export default function ProfilePage() {
             </CardHeader>
             <CardContent>
               <form onSubmit={handleUpdate} className="space-y-6">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>First Name</Label>
-                    <Input value={form.firstName} onChange={(e) => setForm({...form, firstName: e.target.value})} className="rounded-xl h-12" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Last Name</Label>
-                    <Input value={form.lastName} onChange={(e) => setForm({...form, lastName: e.target.value})} className="rounded-xl h-12" />
+                <div className="space-y-2">
+                  <Label>Full Name</Label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input value={form.name} onChange={(e) => setForm({...form, name: e.target.value})} className="pl-10 rounded-xl h-12" />
                   </div>
                 </div>
                 <div className="space-y-2">

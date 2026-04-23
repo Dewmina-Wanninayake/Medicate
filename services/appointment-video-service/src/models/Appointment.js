@@ -34,6 +34,15 @@ const appointmentSchema = new mongoose.Schema(
     cancelledBy: { type: String },
     cancellationReason: { type: String },
     doctorNotes: { type: String },
+    
+    // Chat messages during session
+    chat: [{
+      senderId: String,
+      senderName: String,
+      role: String,
+      message: String,
+      timestamp: { type: Date, default: Date.now }
+    }],
   },
   { timestamps: true }
 );

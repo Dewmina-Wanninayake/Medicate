@@ -1,6 +1,6 @@
 // src/components/layout/MainLayout.jsx
 import { useState } from 'react';
-import { Outlet, useNavigate } from 'react-router';
+import { Outlet, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Calendar, Users, Bell, User,
   Shield, Activity, Settings, Home, FileText,
@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import Header from './Header';
 import Sidebar from './Sidebar';
+import TelemedicinePiP from '../telemedicine/TelemedicinePiP';
 import { useAuth } from '../../context/AuthContext';
 
 const patientNav = [
@@ -15,6 +16,7 @@ const patientNav = [
   { name: 'Dashboard',      href: '/dashboard',        icon: LayoutDashboard },
   { name: 'Find Doctors',   href: '/find-doctors',     icon: Search },
   { name: 'Appointments',   href: '/appointments',     icon: Calendar },
+  { name: 'Check Symptoms', href: '/symptoms',         icon: Shield },
   { name: 'My Records',     href: '/records',          icon: FolderOpen },
   { name: 'Prescriptions',  href: '/prescriptions',    icon: Pill },
   { name: 'Reports',        href: '/reports',          icon: FileText },
@@ -69,6 +71,7 @@ export default function MainLayout() {
           <Outlet />
         </main>
       </div>
+      <TelemedicinePiP />
     </div>
   );
 }

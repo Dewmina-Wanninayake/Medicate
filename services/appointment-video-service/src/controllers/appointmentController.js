@@ -26,6 +26,18 @@ async function bookAppointment(req, res) {
       return res.status(400).json({ error: 'doctorId, appointmentDate, and startTime are required' });
     }
 
+    // Conflict check: is the doctor already booked for this slot?
+    const existing = await Appointment.findOne({
+      doctorId,
+      appointmentDate: new Date(appointmentDate),
+      startTime,
+      status: { $in: ['pending', 'confirmed'] } // Only active appointments cause conflicts
+    });
+
+    if (existing) {
+      return res.status(409).json({ error: 'Doctor is already booked for this time slot' });
+    }
+
     const appointment = await Appointment.create({
       patientId: req.userId,
       doctorId,
@@ -148,4 +160,53 @@ async function cancelAppointment(req, res) {
   }
 }
 
-module.exports = { bookAppointment, getAppointments, getAppointmentById, updateStatus, cancelAppointment };
+// POST /api/appointments/:id/chat — Add a chat message
+async function addChatMessage(req, res) {
+  try {
+    const appt = await Appointment.findById(req.params.id);
+    if (!appt) return res.status(404).json({ error: 'Appointment not found' });
+
+    if (req.userRole === 'patient' && appt.patientId !== req.userId) return res.status(403).json({ error: 'Forbidden' });
+    if (req.userRole === 'doctor' && appt.doctorId !== req.userId) return res.status(403).json({ error: 'Forbidden' });
+
+    const { message, senderName } = req.body;
+    if (!message) return res.status(400).json({ error: 'Message is required' });
+
+    appt.chat.push({
+      senderId: req.userId,
+      senderName: senderName || req.userRole,
+      role: req.userRole,
+      message,
+      timestamp: new Date()
+    });
+
+    await appt.save();
+    res.json(appt.chat);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}
+
+// GET /api/appointments/doctor/:doctorId/availability — public/patient view of doctor schedule
+async function getDoctorAvailability(req, res) {
+  try {
+    const { doctorId } = req.params;
+    const appointments = await Appointment.find({
+      doctorId,
+      status: { $in: ['pending', 'confirmed'] }
+    }).select('appointmentDate startTime status');
+    res.json(appointments);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}
+
+module.exports = { 
+  bookAppointment, 
+  getAppointments, 
+  getAppointmentById, 
+  updateStatus, 
+  cancelAppointment,
+  getDoctorAvailability,
+  addChatMessage
+};

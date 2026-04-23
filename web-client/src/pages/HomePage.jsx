@@ -1,11 +1,12 @@
 // src/pages/HomePage.jsx
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Heart, Calendar, Shield, Stethoscope, ArrowRight, Video, Clock, Star } from 'lucide-react';
 import Logo from '../assets/medicate-logo.png';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
+import { toast } from 'sonner';
 
 const features = [
   { icon: Video, title: 'Video Consultations', desc: 'Secure HD video calls with certified doctors from anywhere, anytime.' },
@@ -18,6 +19,7 @@ const features = [
 
 export default function HomePage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-background">
@@ -48,7 +50,10 @@ export default function HomePage() {
                   placeholder="Describe your symptoms..."
                   className="flex-1 bg-transparent border border-primary/30 rounded-full px-6 py-3 outline-none focus:border-primary transition-colors text-sm"
                 />
-                <Button className="rounded-full px-8 py-3 bg-primary hover:bg-primary/90 text-primary-foreground font-medium h-auto">
+                <Button
+                  onClick={() => navigate('/symptoms')}
+                  className="rounded-full px-8 py-3 bg-primary hover:bg-primary/90 text-primary-foreground font-medium h-auto"
+                >
                   Analyze
                 </Button>
               </div>
@@ -96,23 +101,25 @@ export default function HomePage() {
       </section>
 
       {/* CTA */}
-      <section className="max-w-7xl mx-auto px-6 py-16 mb-16">
-        <Card className="rounded-[48px] bg-gradient-to-r from-primary to-accent text-white border-none shadow-2xl overflow-hidden">
-          <CardContent className="p-16 text-center relative">
-            <div className="relative">
-              <h2 className="text-4xl font-bold mb-4">Ready to Get Started?</h2>
-              <p className="text-xl mb-8 text-white/90">
-                Join thousands of patients who trust Medicate for their healthcare needs
-              </p>
-              <Link to="/register">
-                <Button size="lg" className="rounded-full px-12 py-6 text-lg bg-white text-primary hover:bg-white/90 shadow-xl h-auto">
-                  Create Free Account
-                </Button>
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
-      </section>
+      {!user && (
+        <section className="max-w-7xl mx-auto px-6 py-16 mb-16">
+          <Card className="rounded-[48px] bg-gradient-to-r from-primary to-accent text-white border-none shadow-2xl overflow-hidden">
+            <CardContent className="p-16 text-center relative">
+              <div className="relative">
+                <h2 className="text-4xl font-bold mb-4">Ready to Get Started?</h2>
+                <p className="text-xl mb-8 text-white/90">
+                  Join thousands of patients who trust Medicate for their healthcare needs
+                </p>
+                <Link to="/register">
+                  <Button size="lg" className="rounded-full px-12 py-6 text-lg bg-white text-primary hover:bg-white/90 shadow-xl h-auto">
+                    Create Free Account
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+      )}
 
       {/* Footer */}
       <footer className="bg-card border-t border-border">

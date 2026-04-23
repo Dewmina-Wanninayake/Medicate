@@ -1,6 +1,6 @@
 // src/pages/RegisterPage.jsx
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router';
+import { Link, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -35,9 +35,9 @@ export default function RegisterPage() {
         const match = phoneNumber.match(/^(\+\d{1,4})(\d{7,15})$/);
         if (match) { parsedCountryCode = match[1]; parsedNumber = match[2]; }
       }
-      const name = `${firstName} ${lastName}`.trim();
+      const name = firstName.trim();
       const payload = {
-        name, firstName, lastName, email, password,
+        name, email, password,
         role: selectedRole,
         phone: `${parsedCountryCode}${parsedNumber}`,
       };
@@ -108,23 +108,15 @@ export default function RegisterPage() {
 
             {/* Form */}
             <form onSubmit={handleRegister} className="space-y-4">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="relative">
+                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
-                  id="reg-firstname"
+                  id="reg-fullname"
                   type="text"
-                  placeholder="First Name"
-                  value={firstName}
+                  placeholder="Full Name"
+                  value={firstName} // Reusing firstName state for simplicity, but treating as fullName
                   onChange={(e) => setFirstName(e.target.value)}
-                  className="rounded-3xl bg-muted/30 border-border h-12"
-                  required
-                />
-                <Input
-                  id="reg-lastname"
-                  type="text"
-                  placeholder="Last Name"
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  className="rounded-3xl bg-muted/30 border-border h-12"
+                  className="pl-11 rounded-3xl bg-muted/30 border-border h-12"
                   required
                 />
               </div>

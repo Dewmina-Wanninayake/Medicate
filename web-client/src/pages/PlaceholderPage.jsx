@@ -1,6 +1,6 @@
 import { Card, CardContent } from '../components/ui/card';
 import { Settings, FileText, Pill, DollarSign, FolderOpen, Calendar, Users, Video, Clock, Home, Bell } from 'lucide-react';
-import { useLocation } from 'react-router';
+import { useLocation } from 'react-router-dom';
 
 export default function PlaceholderPage() {
   const location = useLocation();

@@ -1,6 +1,6 @@
 // src/pages/PatientDashboard.jsx
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { appointmentsAPI, notificationsAPI } from '../services/api';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
@@ -13,9 +13,9 @@ import {
 
 export default function PatientDashboard() {
   const { user } = useAuth();
-  const [appointments,   setAppointments]   = useState([]);
-  const [notifications,  setNotifications]  = useState([]);
-  const [loading,        setLoading]        = useState(true);
+  const [appointments, setAppointments] = useState([]);
+  const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     Promise.all([
@@ -37,15 +37,15 @@ export default function PatientDashboard() {
   };
 
   const statusBadge = (status) => {
-    const map = { confirmed:'confirmed', cancelled:'cancelled', rejected:'cancelled', pending:'pending', completed:'completed' };
+    const map = { confirmed: 'confirmed', cancelled: 'cancelled', rejected: 'cancelled', pending: 'pending', completed: 'completed' };
     return map[status] || 'default';
   };
 
   const quickActions = [
-    { icon: Calendar, label: 'Book Appointment',  color: 'text-primary',   bg: 'bg-primary/10',  href: '/appointments' },
-    { icon: Video,    label: 'Join Waiting Room', color: 'text-blue-600',  bg: 'bg-blue-50',     href: '/telemedicine' },
-    { icon: FileText, label: 'My Records',        color: 'text-purple-600',bg: 'bg-purple-50',   href: '/records' },
-    { icon: Pill,     label: 'Prescriptions',     color: 'text-green-600', bg: 'bg-green-50',    href: '/prescriptions' },
+    { icon: Calendar, label: 'Book Appointment', color: 'text-primary', bg: 'bg-primary/10', href: '/appointments' },
+    { icon: Shield,   label: 'Check Symptoms',   color: 'text-accent',  bg: 'bg-accent/10',  href: '/symptoms' },
+    { icon: Video,    label: 'Join Waiting Room', color: 'text-blue-600', bg: 'bg-blue-50', href: '/telemedicine' },
+    { icon: FileText, label: 'My Records', color: 'text-purple-600', bg: 'bg-purple-50', href: '/records' },
   ];
 
   return (
@@ -55,7 +55,7 @@ export default function PatientDashboard() {
         <CardContent className="p-8">
           <div className="flex items-start justify-between flex-wrap gap-4">
             <div>
-              <h2 className="text-3xl font-bold mb-2">Welcome Back, {user?.firstName || 'Patient'}! 👋</h2>
+              <h2 className="text-3xl font-bold mb-2">Welcome Back, {user?.name || 'Patient'}! 👋</h2>
               <p className="text-muted-foreground">Here's your health overview for today.</p>
             </div>
             <Shield className="w-12 h-12 text-primary opacity-30" />
@@ -143,8 +143,8 @@ export default function PatientDashboard() {
           {/* Stats card */}
           <div className="grid grid-cols-2 gap-4">
             {[
-              { label: 'Total Visits',    value: appointments.length, icon: Calendar, bg: 'bg-primary/10',  color: 'text-primary' },
-              { label: 'Notifications',  value: notifications.length, icon: Bell,     bg: 'bg-blue-50',     color: 'text-blue-600' },
+              { label: 'Total Visits', value: appointments.length, icon: Calendar, bg: 'bg-primary/10', color: 'text-primary' },
+              { label: 'Notifications', value: notifications.length, icon: Bell, bg: 'bg-blue-50', color: 'text-blue-600' },
             ].map((s) => (
               <Card key={s.label} className="rounded-[24px] border-none shadow-md bg-gradient-to-br from-card to-muted/20">
                 <CardContent className="p-6 text-center">

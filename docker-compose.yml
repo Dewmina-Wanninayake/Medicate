@@ -128,7 +128,7 @@ services:
     environment:
       PORT: 3005
       MONGO_URI: mongodb://mongo-ai:27017/ai-symptom-db
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
     depends_on:
       - mongo-ai
     networks:

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Card, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
@@ -11,43 +11,35 @@ import { Badge } from '../components/ui/badge';
 import { FileText, Upload, Trash2, Download, AlertCircle, X, FileUp, FolderOpen, ExternalLink } from 'lucide-react';
 
 const RECORD_TYPES = [
-  'Lab Report',
-  'X-Ray',
-  'MRI',
-  'CT Scan',
-  'Prescription',
-  'Discharge Summary',
-  'Vaccination Record',
-  'Other'
+  { label: 'Lab Report', value: 'lab_report' },
+  { label: 'Imaging (X-Ray/MRI)', value: 'imaging' },
+  { label: 'Prescription', value: 'prescription' },
+  { label: 'Consultation Note', value: 'consultation_note' },
+  { label: 'Uploaded Document', value: 'uploaded_document' },
+  { label: 'Other', value: 'other' }
 ];
 
 const SAMPLE_RECORDS = [
   {
     _id: '1',
     title: 'Blood Test Results',
-    type: 'Lab Report',
-    date: '2026-03-15',
-    fileUrl: '#',
+    recordType: 'lab_report',
+    createdAt: '2026-03-15T10:00:00Z',
     fileName: 'blood_test_march.pdf',
-    linkedReports: ['Rep-9921']
   },
   {
     _id: '2',
     title: 'Chest X-Ray',
-    type: 'X-Ray',
-    date: '2026-02-10',
-    fileUrl: '#',
+    recordType: 'imaging',
+    createdAt: '2026-02-10T14:30:00Z',
     fileName: 'chest_xray.jpg',
-    linkedReports: []
   },
   {
     _id: '3',
-    title: 'Annual Physical Prescription',
-    type: 'Prescription',
-    date: '2026-01-20',
-    fileUrl: '#',
-    fileName: 'prescription_physical.pdf',
-    linkedReports: []
+    title: 'Annual Physical',
+    recordType: 'consultation_note',
+    createdAt: '2026-01-20T11:15:00Z',
+    fileName: 'consultation_summary.pdf',
   }
 ];
 
@@ -70,17 +62,12 @@ const RecordCard = ({ record, onDelete, onDownload }) => (
       <h3 className="font-bold text-lg mb-1 truncate" title={record.title}>{record.title}</h3>
       <div className="flex items-center gap-2 mb-4">
         <Badge variant="secondary" className="rounded-full text-[10px] uppercase tracking-wider px-2">
-          {record.type}
+          {record.recordType.replace('_', ' ')}
         </Badge>
-        <span className="text-xs text-muted-foreground">{new Date(record.date).toLocaleDateString()}</span>
+        <span className="text-xs text-muted-foreground">{new Date(record.createdAt).toLocaleDateString()}</span>
       </div>
       <div className="flex items-center justify-between pt-4 border-t border-border/50">
-        <span className="text-xs text-muted-foreground truncate max-w-[150px] italic">{record.fileName}</span>
-        {record.linkedReports?.length > 0 && (
-          <Badge variant="outline" className="rounded-full text-[10px] border-primary/30 text-primary">
-            {record.linkedReports.length} Report Linked
-          </Badge>
-        )}
+        <span className="text-xs text-muted-foreground truncate max-w-full italic">{record.fileName}</span>
       </div>
     </CardContent>
   </Card>
@@ -119,10 +106,10 @@ const UploadDialog = ({ isOpen, onClose, onUpload }) => {
     setTimeout(() => {
       onUpload({
         title,
-        type,
+        recordType: type,
         fileName: file.name,
         fileUrl: URL.createObjectURL(file),
-        date: new Date().toISOString()
+        createdAt: new Date().toISOString()
       });
       setLoading(false);
       onClose();
@@ -157,7 +144,7 @@ const UploadDialog = ({ isOpen, onClose, onUpload }) => {
               </SelectTrigger>
               <SelectContent className="rounded-xl">
                 {RECORD_TYPES.map(t => (
-                  <SelectItem key={t} value={t}>{t}</SelectItem>
+                  <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -309,7 +296,7 @@ export default function RecordsPage() {
         isOpen={isUploadOpen}
         onClose={() => setIsUploadOpen(false)}
         onUpload={(newRecord) => {
-          const record = { ...newRecord, _id: `id-${Date.now()}`, linkedReports: [] };
+          const record = { ...newRecord, _id: `id-${Date.now()}` };
           setRecords(prev => [record, ...prev]);
           setSuccess('Record uploaded successfully');
           setTimeout(() => setSuccess(''), 3000);

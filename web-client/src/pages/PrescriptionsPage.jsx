@@ -7,22 +7,18 @@ import { Pill, Calendar, Clock, Download, Plus, CheckCircle2, AlertCircle, Trash
 const SAMPLE_PRESCRIPTIONS = [
   {
     _id: '1',
-    doctorName: 'Dr. Sarah Adams',
-    date: '2026-03-15',
+    issuedAt: '2026-03-15T09:00:00Z',
     medications: [
       { name: 'Amoxicillin', dosage: '500mg', frequency: '3 times daily', duration: '7 days' },
       { name: 'Ibuprofen', dosage: '400mg', frequency: 'Every 6 hours as needed', duration: '5 days' }
     ],
-    status: 'Active'
   },
   {
     _id: '2',
-    doctorName: 'Dr. Michael Chen',
-    date: '2026-01-10',
+    issuedAt: '2026-01-10T15:30:00Z',
     medications: [
       { name: 'Lisinopril', dosage: '10mg', frequency: 'Once daily', duration: '30 days' }
     ],
-    status: 'Completed'
   }
 ];
 
@@ -88,15 +84,12 @@ export default function PrescriptionsPage() {
                     <Pill className="w-5 h-5 text-primary" />
                   </div>
                   <div>
-                    <CardTitle className="text-lg">{p.doctorName}</CardTitle>
+                    <CardTitle className="text-lg">Prescription #{p._id.slice(-4)}</CardTitle>
                     <p className="text-xs text-muted-foreground flex items-center gap-1">
-                      <Calendar className="w-3 h-3" /> {new Date(p.date).toLocaleDateString()}
+                      <Calendar className="w-3 h-3" /> {new Date(p.issuedAt).toLocaleDateString()}
                     </p>
                   </div>
                 </div>
-                <Badge className={`rounded-full ${p.status === 'Active' ? 'bg-green-500' : 'bg-muted text-muted-foreground'}`}>
-                  {p.status}
-                </Badge>
               </div>
             </CardHeader>
             <CardContent className="p-6">
@@ -170,7 +163,7 @@ export default function PrescriptionsPage() {
                   <div className="flex gap-3 justify-end">
                     <Button variant="outline" onClick={() => setScanPreview(null)} className="rounded-full">Retake</Button>
                     <Button onClick={() => { 
-                      const p = { _id: `p-${Date.now()}`, doctorName: 'Scanned Prescription', date: new Date().toISOString(), medications: [{ name: 'Scanned Meds', dosage: 'N/A', frequency: 'See image', duration: 'N/A' }], status: 'Active' };
+                      const p = { _id: `p-${Date.now()}`, issuedAt: new Date().toISOString(), medications: [{ name: 'Scanned Meds', dosage: 'N/A', frequency: 'See image', duration: 'N/A' }] };
                       setPrescriptions([p, ...prescriptions]);
                       setScanModalOpen(false);
                       setScanPreview(null);
