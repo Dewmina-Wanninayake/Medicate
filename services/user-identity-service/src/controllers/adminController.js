@@ -3,9 +3,10 @@ const User = require('../models/User');
 // GET /api/admin/users
 async function listUsers(req, res) {
   try {
-    const { role, page = 1, limit = 20 } = req.query;
+    const { role, isVerified, page = 1, limit = 20 } = req.query;
     const filter = {};
     if (role) filter.role = role;
+    if (isVerified !== undefined) filter.isVerified = isVerified === 'true';
 
     const users = await User.find(filter)
       .select('-password')
@@ -55,4 +56,20 @@ async function deleteUser(req, res) {
   }
 }
 
-module.exports = { listUsers, verifyDoctor, toggleUserStatus, deleteUser };
+// PUT /api/admin/users/:id
+async function updateUser(req, res) {
+  try {
+    const { name, email, role } = req.body;
+    const user = await User.findByIdAndUpdate(
+      req.params.id,
+      { name, email, role },
+      { new: true }
+    ).select('-password');
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    res.json({ message: 'User updated', user });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}
+
+module.exports = { listUsers, verifyDoctor, toggleUserStatus, deleteUser, updateUser };
