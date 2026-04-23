@@ -21,7 +21,12 @@ async function bookAppointment(req, res) {
       return res.status(403).json({ error: 'Only patients can book appointments' });
     }
 
-    const { doctorId, appointmentDate, startTime, endTime, specialization, reasonForVisit, consultationType } = req.body;
+    const { 
+      doctorId, appointmentDate, startTime, endTime, 
+      specialization, reasonForVisit, consultationType,
+      patientEmail, patientPhone 
+    } = req.body;
+
     if (!doctorId || !appointmentDate || !startTime) {
       return res.status(400).json({ error: 'doctorId, appointmentDate, and startTime are required' });
     }
@@ -31,7 +36,7 @@ async function bookAppointment(req, res) {
       doctorId,
       appointmentDate: new Date(appointmentDate),
       startTime,
-      status: { $in: ['pending', 'confirmed'] } // Only active appointments cause conflicts
+      status: { $in: ['pending', 'confirmed'] } 
     });
 
     if (existing) {
@@ -56,6 +61,8 @@ async function bookAppointment(req, res) {
       doctorId,
       appointmentDate,
       startTime,
+      patientEmail: patientEmail || '',
+      patientPhone: patientPhone || '',
     });
 
     res.status(201).json(appointment);
@@ -104,7 +111,7 @@ async function getAppointmentById(req, res) {
 // PATCH /api/appointments/:id/status  — doctor accepts/rejects; patient/doctor can cancel
 async function updateStatus(req, res) {
   try {
-    const { status, cancellationReason, doctorNotes } = req.body;
+    const { status, cancellationReason, doctorNotes, patientEmail, patientPhone } = req.body;
     const appt = await Appointment.findById(req.params.id);
     if (!appt) return res.status(404).json({ error: 'Appointment not found' });
 
@@ -126,12 +133,17 @@ async function updateStatus(req, res) {
     if (doctorNotes) appt.doctorNotes = doctorNotes;
     await appt.save();
 
-    await notifyService('appointment_status_updated', {
-      appointmentId: appt._id,
-      patientId: appt.patientId,
-      doctorId: appt.doctorId,
-      status,
-    });
+    // Only notify if this is a manual update (not an internal sync from payment)
+    if (!req.body.isInternalSync) {
+      await notifyService('appointment_status_updated', {
+        appointmentId: appt._id,
+        patientId: appt.patientId,
+        doctorId: appt.doctorId,
+        status,
+        patientEmail,
+        patientPhone,
+      });
+    }
 
     res.json(appt);
   } catch (err) {
