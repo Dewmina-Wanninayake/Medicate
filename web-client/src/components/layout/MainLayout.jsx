@@ -37,10 +37,7 @@ const doctorNav = [
 
 const adminNav = [
   { name: 'Dashboard',      href: '/admin',            icon: LayoutDashboard },
-  { name: 'Users',          href: '/admin/users',      icon: Users },
-  { name: 'Doctors',        href: '/admin/doctors',    icon: Shield },
-  { name: 'Activity',       href: '/admin/activity',   icon: Activity },
-  { name: 'Settings',       href: '/admin/settings',   icon: Settings },
+  { name: 'Settings',       href: '/settings',         icon: Settings },
 ];
 
 export default function MainLayout() {
