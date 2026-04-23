@@ -16,7 +16,6 @@ const patientNav = [
   { name: 'Dashboard',      href: '/dashboard',        icon: LayoutDashboard },
   { name: 'Find Doctors',   href: '/find-doctors',     icon: Search },
   { name: 'Appointments',   href: '/appointments',     icon: Calendar },
-  { name: 'Check Symptoms', href: '/symptoms',         icon: Shield },
   { name: 'My Records',     href: '/records',          icon: FolderOpen },
   { name: 'Prescriptions',  href: '/prescriptions',    icon: Pill },
   { name: 'Reports',        href: '/reports',          icon: FileText },

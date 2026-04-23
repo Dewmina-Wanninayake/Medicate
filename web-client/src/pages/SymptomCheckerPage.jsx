@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -20,6 +20,7 @@ const COMMON_SYMPTOMS = [
 
 export default function SymptomCheckerPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [step, setStep] = useState(1);
   const [symptoms, setSymptoms] = useState([]);
   const [inputValue, setInputValue] = useState('');
@@ -31,6 +32,15 @@ export default function SymptomCheckerPage() {
   });
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
+
+  useEffect(() => {
+    if (location.state?.initialQuery) {
+      const query = location.state.initialQuery.trim();
+      if (query && !symptoms.includes(query)) {
+        setSymptoms([query]);
+      }
+    }
+  }, [location.state]);
 
   const addSymptom = (s) => {
     const term = s.trim();

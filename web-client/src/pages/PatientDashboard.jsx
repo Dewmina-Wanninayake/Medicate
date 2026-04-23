@@ -43,7 +43,7 @@ export default function PatientDashboard() {
 
   const quickActions = [
     { icon: Calendar, label: 'Book Appointment', color: 'text-primary', bg: 'bg-primary/10', href: '/appointments' },
-    { icon: Shield,   label: 'Check Symptoms',   color: 'text-accent',  bg: 'bg-accent/10',  href: '/symptoms' },
+    { icon: Shield,   label: 'Check Symptoms',   color: 'text-accent',  bg: 'bg-accent/10',  href: '/' },
     { icon: Video,    label: 'Join Waiting Room', color: 'text-blue-600', bg: 'bg-blue-50', href: '/telemedicine' },
     { icon: FileText, label: 'My Records', color: 'text-purple-600', bg: 'bg-purple-50', href: '/records' },
   ];

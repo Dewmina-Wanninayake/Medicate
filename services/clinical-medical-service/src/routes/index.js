@@ -9,6 +9,7 @@ const prescriptionCtrl = require('../controllers/prescriptionController');
 router.post('/records/upload', requireRole('patient', 'doctor'), upload.single('file'), recordCtrl.uploadRecord);
 router.get('/records', requireRole(), recordCtrl.getRecords);
 router.get('/records/:id', requireRole(), recordCtrl.getRecordById);
+router.patch('/records/:id', requireRole('patient', 'doctor', 'admin'), recordCtrl.updateRecord);
 router.delete('/records/:id', requireRole('patient', 'admin'), recordCtrl.deleteRecord);
 
 // Prescriptions

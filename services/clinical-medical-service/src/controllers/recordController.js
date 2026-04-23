@@ -65,19 +65,29 @@ async function getRecordById(req, res) {
   }
 }
 
-// DELETE /api/records/:id  — patient deletes own record
-async function deleteRecord(req, res) {
+// PATCH /api/records/:id — update title/description
+async function updateRecord(req, res) {
   try {
     const record = await MedicalRecord.findById(req.params.id);
     if (!record) return res.status(404).json({ error: 'Record not found' });
+
+    // Access control: only owner or admin can update
     if (req.userRole === 'patient' && record.patientId !== req.userId) {
       return res.status(403).json({ error: 'Forbidden' });
     }
-    await record.deleteOne();
-    res.json({ message: 'Record deleted' });
+
+    const { title, description, recordType } = req.body;
+    if (title) record.title = title;
+    if (description !== undefined) record.description = description;
+    if (recordType) record.recordType = recordType;
+
+    await record.save();
+    res.json(record);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 }
 
-module.exports = { uploadRecord, getRecords, getRecordById, deleteRecord };
+module.exports = { uploadRecord, getRecords, getRecordById, deleteRecord, updateRecord };
+
+module.exports = { uploadRecord, getRecords, getRecordById, deleteRecord, updateRecord };

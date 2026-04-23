@@ -144,7 +144,7 @@ export default function PrescriptionsPage() {
             </CardHeader>
             <CardContent className="p-8 space-y-6">
               {!scanPreview ? (
-                <div 
+                <div
                   className="border-3 border-dashed border-border/60 rounded-3xl p-12 text-center hover:border-accent/50 hover:bg-accent/5 transition-all cursor-pointer"
                   onClick={() => document.getElementById('scan-input').click()}
                 >
@@ -162,7 +162,7 @@ export default function PrescriptionsPage() {
                   </div>
                   <div className="flex gap-3 justify-end">
                     <Button variant="outline" onClick={() => setScanPreview(null)} className="rounded-full">Retake</Button>
-                    <Button onClick={() => { 
+                    <Button onClick={() => {
                       const p = { _id: `p-${Date.now()}`, issuedAt: new Date().toISOString(), medications: [{ name: 'Scanned Meds', dosage: 'N/A', frequency: 'See image', duration: 'N/A' }] };
                       setPrescriptions([p, ...prescriptions]);
                       setScanModalOpen(false);

@@ -107,6 +107,7 @@ export const recordsAPI = {
       .then((r) => r.data),
   list: (params) => api.get('/api/records', { params }).then((r) => r.data),
   getById: (id) => api.get(`/api/records/${id}`).then((r) => r.data),
+  update: (id, data) => api.patch(`/api/records/${id}`, data).then((r) => r.data),
   delete: (id) => api.delete(`/api/records/${id}`).then((r) => r.data),
 };
 
@@ -127,7 +128,7 @@ export const notificationsAPI = {
 
 // ── Symptoms ──────────────────────────────────────────────────────────────────
 export const symptomsAPI = {
-  check: (symptoms) => api.post('/api/symptoms/check', { symptoms }).then((r) => r.data),
+  check: (symptoms, additionalContext) => api.post('/api/symptoms/check', { symptoms, additionalContext }).then((r) => r.data),
   history: () => api.get('/api/symptoms/history').then((r) => r.data),
   specialties: () => api.get('/api/symptoms/specialties').then((r) => r.data),
 };
