@@ -241,7 +241,9 @@ export default function TelemedicinePage() {
               <div className="p-5 bg-primary/5 rounded-3xl border border-primary/10">
                 <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">Assigned Specialist</p>
                 <p className="font-black text-primary">
-                  {user.role === 'doctor' ? 'Dr. Kasun Perera (Self)' : 'Dr. Kasun Perera'}
+                  {user.role === 'doctor' 
+                    ? `Dr. ${user.name.replace(/^(dr\.?\s*)+/gi, '')} (Self)` 
+                    : activeSession?.doctorId ? 'Specialist' : 'Doctor'}
                 </p>
               </div>
               <div className="p-5 bg-primary/5 rounded-3xl border border-primary/10">

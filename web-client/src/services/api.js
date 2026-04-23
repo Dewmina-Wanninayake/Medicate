@@ -60,6 +60,7 @@ export const adminAPI = {
   toggleStatus: (id, isActive) =>
     api.patch(`/api/admin/users/${id}/status`, { isActive }).then((r) => r.data),
   deleteUser: (id) => api.delete(`/api/admin/users/${id}`).then((r) => r.data),
+  updateUser: (id, data) => api.put(`/api/admin/users/${id}`, data).then((r) => r.data),
 };
 
 // ── Appointments ──────────────────────────────────────────────────────────────
@@ -95,6 +96,7 @@ export const paymentsAPI = {
   list: () => api.get('/api/payments').then((r) => r.data),
   getById: (id) => api.get(`/api/payments/${id}`).then((r) => r.data),
   refund: (id) => api.post(`/api/payments/refund/${id}`).then((r) => r.data),
+  updateStatus: (id, status) => api.patch(`/api/payments/${id}/status`, { status }).then((r) => r.data),
 };
 
 // ── Medical Records ───────────────────────────────────────────────────────────

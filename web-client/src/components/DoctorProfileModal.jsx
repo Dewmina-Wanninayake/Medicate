@@ -96,7 +96,7 @@ export default function DoctorProfileModal({ doctor, isOpen, onClose }) {
             <div className="space-y-2">
               <h2 className="text-4xl font-black text-primary">Booking Confirmed!</h2>
               <p className="text-xl text-muted-foreground">
-                Dr. {doctor.name.toLowerCase().startsWith('dr.') ? doctor.name : `Dr. ${doctor.name}`} will be ready for you on {selectedDate.toLocaleDateString()} at {selectedSlot}.
+                Dr. {doctor.name.replace(/^(dr\.?\s*)+/gi, '')} will be ready for you on {selectedDate.toLocaleDateString()} at {selectedSlot}.
               </p>
             </div>
             <Button onClick={onClose} className="w-full rounded-full py-8 text-xl font-bold shadow-xl shadow-primary/20">
@@ -114,7 +114,7 @@ export default function DoctorProfileModal({ doctor, isOpen, onClose }) {
                 </Avatar>
                 <div>
                   <h2 className="text-3xl font-black text-primary">
-                    {doctor.name.toLowerCase().startsWith('dr.') ? doctor.name : `Dr. ${doctor.name}`}
+                    Dr. {doctor.name.replace(/^(dr\.?\s*)+/gi, '')}
                   </h2>
                   <Badge className="bg-primary/10 text-primary hover:bg-primary/20 border-none px-4 py-1 text-sm font-bold mt-2">
                     {doctor.specialization}
@@ -147,7 +147,7 @@ export default function DoctorProfileModal({ doctor, isOpen, onClose }) {
                       <Info className="w-4 h-4" /> Professional Bio
                     </h3>
                     <p className="text-lg text-muted-foreground leading-relaxed font-medium">
-                      {doctor.bio || `Dr. ${doctor.name} is a renowned ${doctor.specialization} with over ${doctor.experience || 5} years of international experience in specialized medical care.`}
+                      {doctor.bio || `Dr. ${doctor.name.replace(/^(dr\.?\s*)+/gi, '')} is a renowned ${doctor.specialization} with over ${doctor.experience || 5} years of international experience in specialized medical care.`}
                     </p>
                   </div>
 
