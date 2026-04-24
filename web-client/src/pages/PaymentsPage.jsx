@@ -2,10 +2,10 @@ import { useState, useEffect } from 'react';
 import { jsPDF } from 'jspdf';
 import { paymentsAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { Card }   from '../components/ui/card';
+import { Card } from '../components/ui/card';
 import { Button } from '../components/ui/button';
-import { Badge }  from '../components/ui/badge';
-import { Input }  from '../components/ui/input';
+import { Badge } from '../components/ui/badge';
+import { Input } from '../components/ui/input';
 import StripePaymentModal from '../components/StripePaymentModal';
 import {
   CreditCard, Search, Download, Filter, TrendingUp,
@@ -25,35 +25,35 @@ function fmtAmount(amount, currency = 'usd') {
 function statusStyle(status) {
   switch (status) {
     case 'succeeded': return 'bg-green-500/5 text-green-600 border-green-500/20';
-    case 'pending':   return 'bg-yellow-400/5 text-yellow-700 border-yellow-400/20';
-    case 'failed':    return 'bg-red-500/5 text-red-600 border-red-500/20';
-    case 'refunded':  return 'bg-purple-500/5 text-purple-600 border-purple-500/20';
-    default:          return 'bg-gray-100 text-gray-600 border-gray-200';
+    case 'pending': return 'bg-yellow-400/5 text-yellow-700 border-yellow-400/20';
+    case 'failed': return 'bg-red-500/5 text-red-600 border-red-500/20';
+    case 'refunded': return 'bg-purple-500/5 text-purple-600 border-purple-500/20';
+    default: return 'bg-gray-100 text-gray-600 border-gray-200';
   }
 }
 
 function StatusIcon({ status }) {
   switch (status) {
     case 'succeeded': return <CheckCircle className="w-8 h-8" />;
-    case 'pending':   return <Clock className="w-8 h-8" />;
-    case 'failed':    return <AlertCircle className="w-8 h-8" />;
-    default:          return <CreditCard className="w-8 h-8" />;
+    case 'pending': return <Clock className="w-8 h-8" />;
+    case 'failed': return <AlertCircle className="w-8 h-8" />;
+    default: return <CreditCard className="w-8 h-8" />;
   }
 }
 
 function iconBg(status) {
   switch (status) {
     case 'succeeded': return 'bg-green-500/10 text-green-600';
-    case 'pending':   return 'bg-yellow-400/10 text-yellow-600';
-    case 'failed':    return 'bg-red-500/10 text-red-600';
-    default:          return 'bg-gray-100 text-gray-600';
+    case 'pending': return 'bg-yellow-400/10 text-yellow-600';
+    case 'failed': return 'bg-red-500/10 text-red-600';
+    default: return 'bg-gray-100 text-gray-600';
   }
 }
 
 // ── jsPDF Receipt ─────────────────────────────────────────────────────────────
-function downloadReceipt(tx, userName) {
-  const doc    = new jsPDF({ unit: 'mm', format: 'a4' });
-  const W      = doc.internal.pageSize.getWidth();
+function downloadReceipt(tx, user) {
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+  const W = doc.internal.pageSize.getWidth();
   const margin = 20;
 
   // Blue header bar
@@ -97,14 +97,15 @@ function downloadReceipt(tx, userName) {
   doc.text('Total Charged', W / 2, 84, { align: 'center' });
 
   // Details table
+  const patientName = user?.role === 'patient' ? (user?.name || user?.email || 'N/A') : (tx.patientEmail || 'Patient');
   const rows = [
-    ['Patient Name',    userName || 'N/A'],
-    ['Appointment ID',  String(tx.appointmentId || '—')],
-    ['Payment Intent',  String(tx.stripePaymentIntentId || '—')],
-    ['Currency',        (tx.currency || 'usd').toUpperCase()],
-    ['Payment Date',    new Date(tx.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })],
-    ['Payment Time',    new Date(tx.createdAt).toLocaleTimeString()],
-    ['Description',     (tx.description || 'Medical Consultation').replace(/(dr\.?\s*)+/gi, 'Dr. ')],
+    ['Patient Name', patientName],
+    ['Appointment ID', String(tx.appointmentId || '—')],
+    ['Payment Intent', String(tx.stripePaymentIntentId || '—')],
+    ['Currency', (tx.currency || 'usd').toUpperCase()],
+    ['Payment Date', new Date(tx.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })],
+    ['Payment Time', new Date(tx.createdAt).toLocaleTimeString()],
+    ['Description', (tx.description || 'Medical Consultation').replace(/(dr\.?\s*)+/gi, 'Dr. ')],
   ];
   if (tx.doctorName) rows.push(['Doctor', `Dr. ${tx.doctorName.replace(/^(dr\.?\s*)+/gi, '')}`]);
 
@@ -152,14 +153,14 @@ function downloadReceipt(tx, userName) {
 
 // ── Component ─────────────────────────────────────────────────────────────────
 export default function PaymentsPage() {
-  const { user }   = useAuth();
+  const { user } = useAuth();
   const [transactions, setTransactions] = useState([]);
-  const [loading,      setLoading]      = useState(true);
-  const [refreshing,   setRefreshing]   = useState(false);
-  const [searchTerm,   setSearchTerm]   = useState('');
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
   // Resume-payment modal state
-  const [resumeModalOpen,   setResumeModalOpen]   = useState(false);
+  const [resumeModalOpen, setResumeModalOpen] = useState(false);
   const [resumePaymentData, setResumePaymentData] = useState(null);
 
   const fetchPayments = async (silent = false) => {
@@ -186,11 +187,11 @@ export default function PaymentsPage() {
       return;
     }
     setResumePaymentData({
-      paymentId:    tx._id,
+      paymentId: tx._id,
       clientSecret: tx.stripeClientSecret,
-      amount:       tx.amount,
-      currency:     tx.currency,
-      doctorName:   tx.doctorName ? tx.doctorName.replace(/^(dr\.?\s*)+/gi, '') : undefined,
+      amount: tx.amount,
+      currency: tx.currency,
+      doctorName: tx.doctorName ? tx.doctorName.replace(/^(dr\.?\s*)+/gi, '') : undefined,
       patientEmail: tx.patientEmail || user?.email || '',
     });
     setResumeModalOpen(true);
@@ -211,16 +212,16 @@ export default function PaymentsPage() {
   const filtered = transactions.filter(tx => {
     const q = searchTerm.toLowerCase();
     return (
-      (tx.description           || '').toLowerCase().includes(q) ||
+      (tx.description || '').toLowerCase().includes(q) ||
       (tx.stripePaymentIntentId || '').toLowerCase().includes(q) ||
-      (tx.status                || '').toLowerCase().includes(q) ||
-      (tx.appointmentId         || '').toLowerCase().includes(q)
+      (tx.status || '').toLowerCase().includes(q) ||
+      (tx.appointmentId || '').toLowerCase().includes(q)
     );
   });
 
-  const totalSpent    = transactions.filter(t => t.status === 'succeeded').reduce((s, t) => s + t.amount, 0);
+  const totalSpent = transactions.filter(t => t.status === 'succeeded').reduce((s, t) => s + t.amount, 0);
   const pendingAmount = transactions.filter(t => t.status === 'pending').reduce((s, t) => s + t.amount, 0);
-  const pendingCount  = transactions.filter(t => t.status === 'pending').length;
+  const pendingCount = transactions.filter(t => t.status === 'pending').length;
 
   return (
     <div className="space-y-8 p-1">
@@ -245,7 +246,7 @@ export default function PaymentsPage() {
       </div>
 
       {/* Pending payment banner */}
-      {pendingCount > 0 && (
+      {user?.role === 'patient' && pendingCount > 0 && (
         <div className="flex items-center gap-5 p-6 rounded-[28px] bg-yellow-50 border-2 border-yellow-200">
           <div className="w-12 h-12 rounded-2xl bg-yellow-400/20 flex items-center justify-center text-yellow-600 shrink-0">
             <Clock className="w-6 h-6" />
@@ -269,7 +270,9 @@ export default function PaymentsPage() {
           </div>
           <div>
             <div className="text-3xl font-black text-primary">{fmtAmount(totalSpent)}</div>
-            <div className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Total Spent</div>
+            <div className="text-sm font-bold text-muted-foreground uppercase tracking-widest">
+              {user?.role === 'doctor' ? 'Total Earned' : 'Total Spent'}
+            </div>
           </div>
         </Card>
         <Card className="rounded-[32px] border-none shadow-md bg-white/50 backdrop-blur-sm p-6 flex items-center gap-6">
@@ -278,7 +281,9 @@ export default function PaymentsPage() {
           </div>
           <div>
             <div className="text-3xl font-black text-yellow-600">{fmtAmount(pendingAmount)}</div>
-            <div className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Pending Bills</div>
+            <div className="text-sm font-bold text-muted-foreground uppercase tracking-widest">
+              {user?.role === 'doctor' ? 'Pending Revenue' : 'Pending Bills'}
+            </div>
           </div>
         </Card>
         <Card className="rounded-[32px] border-none shadow-md bg-white/50 backdrop-blur-sm p-6 flex items-center gap-6">
@@ -337,7 +342,9 @@ export default function PaymentsPage() {
                   {/* Info */}
                   <div className="min-w-0 flex-1">
                     <h3 className="text-xl font-black tracking-tight truncate">
-                      {(tx.description || 'Medical Consultation').replace(/(dr\.?\s*)+/gi, 'Dr. ')}
+                      {user?.role === 'doctor'
+                        ? `Payment from ${tx.patientEmail || 'Patient'}`
+                        : (tx.description || 'Medical Consultation').replace(/(dr\.?\s*)+/gi, 'Dr. ')}
                     </h3>
                     <div className="flex flex-wrap items-center gap-5 text-sm font-medium text-muted-foreground mt-1.5">
                       <span className="flex items-center gap-2">
@@ -352,7 +359,7 @@ export default function PaymentsPage() {
                           year: 'numeric', month: 'short', day: 'numeric',
                         })}
                       </span>
-                      {tx.doctorName && (
+                      {tx.doctorName && user?.role !== 'doctor' && (
                         <span className="font-semibold text-primary">Dr. {tx.doctorName.replace(/^(dr\.?\s*)+/gi, '')}</span>
                       )}
                     </div>
@@ -376,7 +383,7 @@ export default function PaymentsPage() {
                   </Badge>
 
                   {/* Pending → Complete Payment button */}
-                  {tx.status === 'pending' && tx.stripeClientSecret && (
+                  {user?.role === 'patient' && tx.status === 'pending' && tx.stripeClientSecret && (
                     <Button
                       className="h-10 w-full rounded-xl bg-yellow-500 hover:bg-yellow-600 text-white font-black text-xs gap-2"
                       onClick={() => handleResumePayment(tx)}
@@ -393,7 +400,7 @@ export default function PaymentsPage() {
                       size="icon"
                       className="h-12 w-12 rounded-2xl bg-primary/5 hover:bg-primary/10 text-primary"
                       title="Download Receipt"
-                      onClick={() => downloadReceipt(tx, user?.name || user?.email)}
+                      onClick={() => downloadReceipt(tx, user)}
                     >
                       <Download className="w-5 h-5" />
                     </Button>
