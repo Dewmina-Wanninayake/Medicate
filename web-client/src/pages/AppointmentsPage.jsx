@@ -5,11 +5,11 @@ import {
   Calendar as CalendarIcon, Check, X, User, CreditCard,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { Button }                    from '../components/ui/button';
-import { Card, CardContent }         from '../components/ui/card';
-import { Input }                     from '../components/ui/input';
-import { Badge }                     from '../components/ui/badge';
-import { Link }                      from 'react-router-dom';
+import { Button } from '../components/ui/button';
+import { Card, CardContent } from '../components/ui/card';
+import { Input } from '../components/ui/input';
+import { Badge } from '../components/ui/badge';
+import { Link } from 'react-router-dom';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
   DialogTrigger, DialogFooter, DialogDescription,
@@ -17,13 +17,13 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '../components/ui/select';
-import { Calendar }                  from '../components/ui/calendar';
+import { Calendar } from '../components/ui/calendar';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from '../components/ui/dropdown-menu';
 import { Popover, PopoverContent, PopoverTrigger } from '../components/ui/popover';
-import { useAuth }                   from '../context/AuthContext';
-import StripePaymentModal            from '../components/StripePaymentModal';
+import { useAuth } from '../context/AuthContext';
+import StripePaymentModal from '../components/StripePaymentModal';
 
 // Default consultation fee per appointment (in cents)
 const CONSULTATION_FEE_CENTS = 10000; // $100.00
@@ -32,33 +32,33 @@ export default function AppointmentsPage() {
   const { user } = useAuth();
   const isDoctor = user?.role === 'doctor';
 
-  const [appointments,       setAppointments]       = useState([]);
-  const [doctors,            setDoctors]            = useState([]);
-  const [loading,            setLoading]            = useState(true);
-  const [searchTerm,         setSearchTerm]         = useState('');
+  const [appointments, setAppointments] = useState([]);
+  const [doctors, setDoctors] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
   const [doctorAvailability, setDoctorAvailability] = useState([]);
 
   // Booking dialog
-  const [bookingDialogOpen, setBookingDialogOpen]   = useState(false);
-  const [bookingStep,       setBookingStep]         = useState('form'); // 'form' | 'paying'
-  const [newBooking,        setNewBooking]          = useState({
-    doctorId:        '',
+  const [bookingDialogOpen, setBookingDialogOpen] = useState(false);
+  const [bookingStep, setBookingStep] = useState('form'); // 'form' | 'paying'
+  const [newBooking, setNewBooking] = useState({
+    doctorId: '',
     appointmentDate: new Date(),
-    startTime:       '09:00',
-    specialization:  '',
-    reasonForVisit:  '',
-    consultationType:'video',
+    startTime: '09:00',
+    specialization: '',
+    reasonForVisit: '',
+    consultationType: 'video',
   });
 
   // Stripe payment state
   const [paymentClientSecret, setPaymentClientSecret] = useState('');
-  const [paymentModalOpen,    setPaymentModalOpen]    = useState(false);
-  const [currentPaymentData,  setCurrentPaymentData]  = useState(null);
-  const [isCreatingPayment,   setIsCreatingPayment]   = useState(false);
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [currentPaymentData, setCurrentPaymentData] = useState(null);
+  const [isCreatingPayment, setIsCreatingPayment] = useState(false);
 
   // Details dialog
-  const [detailsDialogOpen,  setDetailsDialogOpen]  = useState(false);
-  const [selectedAppointment,setSelectedAppointment]= useState(null);
+  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
+  const [selectedAppointment, setSelectedAppointment] = useState(null);
 
   // ── Data fetching ──────────────────────────────────────────────────────────
 
@@ -119,37 +119,37 @@ export default function AppointmentsPage() {
       const appointment = await appointmentsAPI.book({
         ...newBooking,
         appointmentDate: newBooking.appointmentDate.toISOString(),
-        patientEmail:    user?.email || '',
-        patientPhone:    user?.phone || '',
+        patientEmail: user?.email || '',
+        patientPhone: user?.phone || '',
       });
 
       const selectedDoctor = doctors.find(d => d._id === newBooking.doctorId);
-      const doctorName     = selectedDoctor?.name || '';
+      const doctorName = selectedDoctor?.name || '';
 
       // Step 2: Create Stripe payment intent
       const intentData = await paymentsAPI.createIntent({
         appointmentId: appointment._id,
-        doctorId:      newBooking.doctorId,
-        amount:        CONSULTATION_FEE_CENTS,
-        currency:      'usd',
-        description:   `Consultation with Dr. ${doctorName.replace(/^(dr\.?\s*)+/gi, '')} – ${new Date(newBooking.appointmentDate).toLocaleDateString()}`,
-        patientEmail:  user?.email  || '',
-        patientPhone:  user?.phone  || '',
+        doctorId: newBooking.doctorId,
+        amount: CONSULTATION_FEE_CENTS,
+        currency: 'usd',
+        description: `Consultation with Dr. ${doctorName.replace(/^(dr\.?\s*)+/gi, '')} – ${new Date(newBooking.appointmentDate).toLocaleDateString()}`,
+        patientEmail: user?.email || '',
+        patientPhone: user?.phone || '',
         doctorName,
         appointmentDate: newBooking.appointmentDate.toISOString(),
-        startTime:       newBooking.startTime,
+        startTime: newBooking.startTime,
       });
 
       // Step 3: Close booking dialog, open payment modal
       setBookingDialogOpen(false);
       setPaymentClientSecret(intentData.clientSecret);
       setCurrentPaymentData({
-        paymentId:     intentData.paymentId,
-        amount:        intentData.amount,
-        currency:      intentData.currency,
-        doctorName:    doctorName.replace(/^(dr\.?\s*)+/gi, ''),
+        paymentId: intentData.paymentId,
+        amount: intentData.amount,
+        currency: intentData.currency,
+        doctorName: doctorName.replace(/^(dr\.?\s*)+/gi, ''),
         appointmentDate: newBooking.appointmentDate,
-        patientEmail:  user?.email || '',
+        patientEmail: user?.email || '',
       });
       setPaymentModalOpen(true);
 
@@ -175,8 +175,8 @@ export default function AppointmentsPage() {
     fetchAppointments();
     // Reset booking form
     setNewBooking({
-      doctorId:'', appointmentDate: new Date(), startTime:'09:00',
-      specialization:'', reasonForVisit:'', consultationType:'video',
+      doctorId: '', appointmentDate: new Date(), startTime: '09:00',
+      specialization: '', reasonForVisit: '', consultationType: 'video',
     });
     setPaymentClientSecret('');
     setCurrentPaymentData(null);
@@ -216,17 +216,17 @@ export default function AppointmentsPage() {
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
       case 'confirmed': return 'bg-green-100 text-green-700 border-green-200';
-      case 'pending':   return 'bg-yellow-100 text-yellow-700 border-yellow-200';
+      case 'pending': return 'bg-yellow-100 text-yellow-700 border-yellow-200';
       case 'completed': return 'bg-blue-100 text-blue-700 border-blue-200';
       case 'cancelled': return 'bg-red-100 text-red-700 border-red-200';
-      default:          return 'bg-gray-100 text-gray-700 border-gray-200';
+      default: return 'bg-gray-100 text-gray-700 border-gray-200';
     }
   };
 
   const filteredAppointments = appointments.filter(a => {
     const q = searchTerm.toLowerCase();
     return (a.specialization || '').toLowerCase().includes(q) ||
-           (a.status         || '').toLowerCase().includes(q);
+      (a.status || '').toLowerCase().includes(q);
   });
 
   // ── Render ─────────────────────────────────────────────────────────────────

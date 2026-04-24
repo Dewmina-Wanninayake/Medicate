@@ -1,9 +1,9 @@
-const Payment      = require('../models/Payment');
+const Payment = require('../models/Payment');
 const Notification = require('../models/Notification');
 const { getStripe } = require('../config/stripe');
 const { sendEmail } = require('../config/mailer');
-const { sendSMS }   = require('../config/sms');
-const axios       = require('axios');
+const { sendSMS } = require('../config/sms');
+const axios = require('axios');
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -11,14 +11,14 @@ async function syncAppointmentStatus(appointmentId, status) {
   try {
     const url = process.env.APPOINTMENT_SERVICE_URL;
     if (!url) return;
-    
+
     // We call the appointment service internal endpoint to update status
     // Note: In a real system, we'd use a more secure internal auth or an event bus
-    await axios.patch(`${url}/api/appointments/${appointmentId}/status`, { 
+    await axios.patch(`${url}/api/appointments/${appointmentId}/status`, {
       status,
       // We pass these so the appointment service can trigger notifications if needed
       // though we already handle 'payment_success' notifications here.
-      isInternalSync: true 
+      isInternalSync: true
     }, {
       headers: {
         'x-user-role': 'admin', // System-level update
@@ -40,7 +40,7 @@ function formatAmount(amount, currency = 'usd') {
 
 function buildEmailHtml(title, message, payment, isSuccess) {
   const color = isSuccess ? '#22c55e' : '#ef4444';
-  const icon  = isSuccess ? '✅' : '❌';
+  const icon = isSuccess ? '✅' : '❌';
   return `
     <div style="font-family:Inter,sans-serif;max-width:600px;margin:0 auto;padding:40px 24px;background:#f9fafb;border-radius:16px;">
       <div style="text-align:center;margin-bottom:32px;">
@@ -66,23 +66,23 @@ function buildEmailHtml(title, message, payment, isSuccess) {
 async function sendPaymentNotification(payment, eventType) {
   try {
     const isSuccess = eventType === 'payment_success';
-    const title     = isSuccess ? 'Appointment Confirmed (Payment Received) 🎉' : 'Payment Failed';
-    const message   = isSuccess
+    const title = isSuccess ? 'Appointment Confirmed (Payment Received) 🎉' : 'Payment Failed';
+    const message = isSuccess
       ? `Your payment of ${formatAmount(payment.amount, payment.currency)} was successful. Your appointment for ${payment.appointmentId} is now officially confirmed.`
       : `Your payment for appointment ${payment.appointmentId} failed. Please try again.`;
 
     // Persist in-app notification
     await Notification.create({
-      userId:   payment.patientId,
-      type:     eventType,
+      userId: payment.patientId,
+      type: eventType,
       title,
       message,
       channels: ['email', 'sms', 'in_app'],
       metadata: {
-        paymentId:     payment._id,
+        paymentId: payment._id,
         appointmentId: payment.appointmentId,
-        amount:        payment.amount,
-        currency:      payment.currency,
+        amount: payment.amount,
+        currency: payment.currency,
       },
       isRead: false,
     });
@@ -90,10 +90,10 @@ async function sendPaymentNotification(payment, eventType) {
     // Send email
     if (payment.patientEmail) {
       await sendEmail({
-        to:      payment.patientEmail,
+        to: payment.patientEmail,
         subject: title,
-        text:    message,
-        html:    buildEmailHtml(title, message, payment, isSuccess),
+        text: message,
+        html: buildEmailHtml(title, message, payment, isSuccess),
       });
     }
 
@@ -101,12 +101,12 @@ async function sendPaymentNotification(payment, eventType) {
     const rawPhone = payment.patientPhone;
     if (rawPhone && isSuccess) {
       console.log(`[SMS] Attempting to send to: "${rawPhone}" for payment ${payment._id}`);
-      
+
       let dateStr = 'your scheduled date';
       if (payment.appointmentDate) {
         dateStr = new Date(payment.appointmentDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
       }
-      
+
       let timeStr = '';
       if (payment.startTime) {
         const [hourStr, minStr] = payment.startTime.split(':');
@@ -117,9 +117,9 @@ async function sendPaymentNotification(payment, eventType) {
       }
 
       const docStr = payment.doctorName ? ` with Dr. ${payment.doctorName.replace(/^(dr\.?\s*)+/gi, '')}` : '';
-      
+
       const smsBody = `Medicate: Your appointment${docStr} is confirmed for ${dateStr}${timeStr}.`;
-      
+
       await sendSMS({ to: rawPhone, body: smsBody });
     } else if (!rawPhone) {
       console.warn(`[SMS] Skipped — no phone number stored for payment ${payment._id}`);
@@ -157,38 +157,38 @@ async function createPaymentIntent(req, res) {
 
     const stripe = getStripe();
     const intent = await stripe.paymentIntents.create({
-      amount:      Math.round(amount),
+      amount: Math.round(amount),
       currency,
       description: description || `Consultation fee – Appointment ${appointmentId}`,
       metadata: {
         appointmentId,
-        patientId:    req.userId,
-        doctorId:     doctorId || '',
+        patientId: req.userId,
+        doctorId: doctorId || '',
         patientEmail: patientEmail || '',
       },
       receipt_email: patientEmail || undefined,
     });
 
     const payment = await Payment.create({
-      patientId:             req.userId,
-      doctorId:              doctorId || '',
+      patientId: req.userId,
+      doctorId: doctorId || '',
       appointmentId,
       amount,
       currency,
-      status:                'pending',
+      status: 'pending',
       stripePaymentIntentId: intent.id,
-      stripeClientSecret:    intent.client_secret,
+      stripeClientSecret: intent.client_secret,
       description,
-      patientEmail:          patientEmail || '',
-      patientPhone:          patientPhone  || '',
-      doctorName:            doctorName    || '',
+      patientEmail: patientEmail || '',
+      patientPhone: patientPhone || '',
+      doctorName: doctorName || '',
       appointmentDate,
       startTime,
     });
 
     res.status(201).json({
-      paymentId:             payment._id,
-      clientSecret:          intent.client_secret,
+      paymentId: payment._id,
+      clientSecret: intent.client_secret,
       stripePaymentIntentId: intent.id,
       amount,
       currency,
@@ -217,7 +217,7 @@ async function handleWebhook(req, res) {
 
   try {
     if (event.type === 'payment_intent.succeeded') {
-      const intent  = event.data.object;
+      const intent = event.data.object;
       const payment = await Payment.findOneAndUpdate(
         { stripePaymentIntentId: intent.id },
         { status: 'succeeded' },
@@ -230,7 +230,7 @@ async function handleWebhook(req, res) {
       }
 
     } else if (event.type === 'payment_intent.payment_failed') {
-      const intent  = event.data.object;
+      const intent = event.data.object;
       const payment = await Payment.findOneAndUpdate(
         { stripePaymentIntentId: intent.id },
         { status: 'failed' },
@@ -260,8 +260,8 @@ async function confirmPayment(req, res) {
     const intent = await stripe.paymentIntents.retrieve(payment.stripePaymentIntentId);
 
     const statusMap = {
-      succeeded:               'succeeded',
-      canceled:                'failed',
+      succeeded: 'succeeded',
+      canceled: 'failed',
       requires_payment_method: 'pending',
     };
 
@@ -306,7 +306,7 @@ async function getPaymentById(req, res) {
 
     const isOwner =
       (req.userRole === 'patient' && payment.patientId === req.userId) ||
-      (req.userRole === 'doctor'  && payment.doctorId  === req.userId) ||
+      (req.userRole === 'doctor' && payment.doctorId === req.userId) ||
       req.userRole === 'admin';
 
     if (!isOwner) return res.status(403).json({ error: 'Forbidden' });
@@ -328,10 +328,10 @@ async function refundPayment(req, res) {
     }
 
     const stripe = getStripe();
-    const refund  = await stripe.refunds.create({ payment_intent: payment.stripePaymentIntentId });
+    const refund = await stripe.refunds.create({ payment_intent: payment.stripePaymentIntentId });
 
-    payment.status     = 'refunded';
-    payment.refundId   = refund.id;
+    payment.status = 'refunded';
+    payment.refundId = refund.id;
     payment.refundedAt = new Date();
     await payment.save();
 
