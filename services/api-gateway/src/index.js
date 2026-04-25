@@ -10,9 +10,6 @@ const app = express();
 app.use(cors());
 app.use(morgan('dev'));
 
-// Apply JWT auth middleware globally
-app.use(authMiddleware);
-
 const {
   USER_IDENTITY_SERVICE_URL,
   CLINICAL_MEDICAL_SERVICE_URL,
@@ -30,15 +27,22 @@ const proxyOptions = (target) => ({
   },
 });
 
+// 1. Proxy uploads BEFORE auth middleware so they are publicly accessible 
+// (required for browser img/iframe tags which don't send Authorization headers)
+app.use('/uploads', createProxyMiddleware(proxyOptions(CLINICAL_MEDICAL_SERVICE_URL)));
+
+// 2. Apply JWT auth middleware to all other API routes
+app.use(authMiddleware);
 
 
-// Route: /api/auth/** and /api/users/** → user-identity-service
+
+// Route: /api/auth/**, /api/users/**, and /api/doctors/** → user-identity-service
 app.use('/api/auth', createProxyMiddleware(proxyOptions(USER_IDENTITY_SERVICE_URL)));
 app.use('/api/users', createProxyMiddleware(proxyOptions(USER_IDENTITY_SERVICE_URL)));
+app.use('/api/doctors', createProxyMiddleware(proxyOptions(USER_IDENTITY_SERVICE_URL)));
 app.use('/api/admin', createProxyMiddleware(proxyOptions(USER_IDENTITY_SERVICE_URL)));
 
-// Route: /api/doctors/** and /api/records/** → clinical-medical-service
-app.use('/api/doctors', createProxyMiddleware(proxyOptions(CLINICAL_MEDICAL_SERVICE_URL)));
+// Route: /api/records/** and /api/prescriptions/** → clinical-medical-service
 app.use('/api/records', createProxyMiddleware(proxyOptions(CLINICAL_MEDICAL_SERVICE_URL)));
 app.use('/api/prescriptions', createProxyMiddleware(proxyOptions(CLINICAL_MEDICAL_SERVICE_URL)));
 

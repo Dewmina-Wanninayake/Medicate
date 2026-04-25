@@ -113,10 +113,11 @@ services:
       SMTP_PORT: ${SMTP_PORT:-587}
       SMTP_USER: ${SMTP_USER:-}
       SMTP_PASS: ${SMTP_PASS:-}
-      EMAIL_FROM: ${EMAIL_FROM:-noreply@healthcare.local}
+      SMTP_FROM: ${SMTP_FROM:-noreply@healthcare.local}
+      EMAIL_FROM: ${SMTP_FROM:-noreply@healthcare.local}
       TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:-}
       TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:-}
-      TWILIO_PHONE_NUMBER: ${TWILIO_PHONE_NUMBER:-}
+      TWILIO_FROM_NUMBER: ${TWILIO_FROM_NUMBER:-}
     depends_on:
       - mongo-transaction
     networks:
@@ -128,7 +129,7 @@ services:
     environment:
       PORT: 3005
       MONGO_URI: mongodb://mongo-ai:27017/ai-symptom-db
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
     depends_on:
       - mongo-ai
     networks:
@@ -159,7 +160,11 @@ services:
   # ─── Web Client (React Frontend) ───────────────────────────────────────────
 
   web-client:
-    build: ./web-client
+    build:
+      context: ./web-client
+      args:
+        VITE_API_URL: ""
+        VITE_STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY:-pk_test_placeholder}
     container_name: web-client
     ports:
       - "5173:80"

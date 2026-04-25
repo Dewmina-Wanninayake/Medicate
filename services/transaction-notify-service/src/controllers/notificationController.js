@@ -54,9 +54,9 @@ function buildTemplates(event, data) {
     case 'appointment_booked':
       templates.push({
         userId: data.patientId,
-        title: 'Appointment Booked',
-        message: `Your appointment has been booked for ${data.appointmentDate} at ${data.startTime}. Awaiting doctor confirmation.`,
-        channels: ['email', 'sms', 'in_app'],
+        title: 'Booking Initiated (Payment Pending)',
+        message: `Your appointment has been booked for ${data.appointmentDate} at ${data.startTime}. Please complete your payment to confirm the session.`,
+        channels: ['email', 'in_app'],
         email: data.patientEmail,
         phone: data.patientPhone,
       });
@@ -85,8 +85,9 @@ function buildTemplates(event, data) {
         userId: data.patientId,
         title: 'Payment Successful',
         message: `Your payment of ${formatAmount(data.amount, data.currency)} was successful for appointment ${data.appointmentId}.`,
-        channels: ['email', 'in_app'],
+        channels: ['email', 'sms', 'in_app'],
         email: data.patientEmail,
+        phone: data.patientPhone,
       });
       break;
 
@@ -95,8 +96,9 @@ function buildTemplates(event, data) {
         userId: data.patientId,
         title: 'Payment Failed',
         message: `Your payment for appointment ${data.appointmentId} failed. Please try again.`,
-        channels: ['email', 'in_app'],
+        channels: ['email', 'sms', 'in_app'],
         email: data.patientEmail,
+        phone: data.patientPhone,
       });
       break;
 

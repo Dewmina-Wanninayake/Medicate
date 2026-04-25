@@ -20,7 +20,7 @@ async function sendEmail({ to, subject, text, html }) {
   try {
     const mailer = getMailer();
     const info = await mailer.sendMail({
-      from: process.env.EMAIL_FROM || 'noreply@healthcare.local',
+      from: process.env.EMAIL_FROM || process.env.SMTP_FROM || 'noreply@healthcare.local',
       to,
       subject,
       text,

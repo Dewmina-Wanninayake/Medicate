@@ -1,5 +1,5 @@
 // src/components/layout/Sidebar.jsx
-import { Link, useLocation } from 'react-router';
+import { Link, useLocation } from 'react-router-dom';
 import { LogOut } from 'lucide-react';
 import { Button } from '../ui/button';
 

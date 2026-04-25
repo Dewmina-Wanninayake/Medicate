@@ -1,6 +1,6 @@
 // src/components/layout/MainLayout.jsx
 import { useState } from 'react';
-import { Outlet, useNavigate } from 'react-router';
+import { Outlet, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Calendar, Users, Bell, User,
   Shield, Activity, Settings, Home, FileText,
@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import Header from './Header';
 import Sidebar from './Sidebar';
+import TelemedicinePiP from '../telemedicine/TelemedicinePiP';
 import { useAuth } from '../../context/AuthContext';
 
 const patientNav = [
@@ -17,7 +18,6 @@ const patientNav = [
   { name: 'Appointments',   href: '/appointments',     icon: Calendar },
   { name: 'My Records',     href: '/records',          icon: FolderOpen },
   { name: 'Prescriptions',  href: '/prescriptions',    icon: Pill },
-  { name: 'Reports',        href: '/reports',          icon: FileText },
   { name: 'Payments',       href: '/payments',         icon: DollarSign },
   { name: 'Settings',       href: '/settings',         icon: Settings },
 ];
@@ -28,6 +28,7 @@ const doctorNav = [
   { name: 'Patients',       href: '/patients',         icon: Users },
   { name: 'Prescriptions',  href: '/prescriptions',    icon: Pill },
   { name: 'Telemedicine',   href: '/telemedicine',     icon: Video },
+  { name: 'Payments',       href: '/payments',         icon: DollarSign },
   { name: 'Schedule',       href: '/schedule',         icon: Clock },
   { name: 'Messages',       href: '/messages',         icon: Home },
   { name: 'Profile',        href: '/profile',          icon: Settings },
@@ -35,10 +36,7 @@ const doctorNav = [
 
 const adminNav = [
   { name: 'Dashboard',      href: '/admin',            icon: LayoutDashboard },
-  { name: 'Users',          href: '/admin/users',      icon: Users },
-  { name: 'Doctors',        href: '/admin/doctors',    icon: Shield },
-  { name: 'Activity',       href: '/admin/activity',   icon: Activity },
-  { name: 'Settings',       href: '/admin/settings',   icon: Settings },
+  { name: 'Settings',       href: '/settings',         icon: Settings },
 ];
 
 export default function MainLayout() {
@@ -69,6 +67,7 @@ export default function MainLayout() {
           <Outlet />
         </main>
       </div>
+      <TelemedicinePiP />
     </div>
   );
 }

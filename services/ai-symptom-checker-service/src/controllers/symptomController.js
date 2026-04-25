@@ -1,5 +1,5 @@
 const SymptomCheck = require('../models/SymptomCheck');
-const { analyzeSymptoms } = require('../config/anthropic');
+const { analyzeSymptoms } = require('../config/gemini');
 
 // POST /api/symptoms/check
 // Patient submits symptoms and receives AI-powered preliminary analysis

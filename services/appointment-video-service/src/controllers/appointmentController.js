@@ -21,9 +21,26 @@ async function bookAppointment(req, res) {
       return res.status(403).json({ error: 'Only patients can book appointments' });
     }
 
-    const { doctorId, appointmentDate, startTime, endTime, specialization, reasonForVisit, consultationType } = req.body;
+    const { 
+      doctorId, appointmentDate, startTime, endTime, 
+      specialization, reasonForVisit, consultationType,
+      patientEmail, patientPhone 
+    } = req.body;
+
     if (!doctorId || !appointmentDate || !startTime) {
       return res.status(400).json({ error: 'doctorId, appointmentDate, and startTime are required' });
+    }
+
+    // Conflict check: is the doctor already booked for this slot?
+    const existing = await Appointment.findOne({
+      doctorId,
+      appointmentDate: new Date(appointmentDate),
+      startTime,
+      status: { $in: ['pending', 'confirmed'] } 
+    });
+
+    if (existing) {
+      return res.status(409).json({ error: 'Doctor is already booked for this time slot' });
     }
 
     const appointment = await Appointment.create({
@@ -44,6 +61,8 @@ async function bookAppointment(req, res) {
       doctorId,
       appointmentDate,
       startTime,
+      patientEmail: patientEmail || '',
+      patientPhone: patientPhone || '',
     });
 
     res.status(201).json(appointment);
@@ -92,7 +111,7 @@ async function getAppointmentById(req, res) {
 // PATCH /api/appointments/:id/status  — doctor accepts/rejects; patient/doctor can cancel
 async function updateStatus(req, res) {
   try {
-    const { status, cancellationReason, doctorNotes } = req.body;
+    const { status, cancellationReason, doctorNotes, patientEmail, patientPhone } = req.body;
     const appt = await Appointment.findById(req.params.id);
     if (!appt) return res.status(404).json({ error: 'Appointment not found' });
 
@@ -114,12 +133,17 @@ async function updateStatus(req, res) {
     if (doctorNotes) appt.doctorNotes = doctorNotes;
     await appt.save();
 
-    await notifyService('appointment_status_updated', {
-      appointmentId: appt._id,
-      patientId: appt.patientId,
-      doctorId: appt.doctorId,
-      status,
-    });
+    // Only notify if this is a manual update (not an internal sync from payment)
+    if (!req.body.isInternalSync) {
+      await notifyService('appointment_status_updated', {
+        appointmentId: appt._id,
+        patientId: appt.patientId,
+        doctorId: appt.doctorId,
+        status,
+        patientEmail,
+        patientPhone,
+      });
+    }
 
     res.json(appt);
   } catch (err) {
@@ -148,4 +172,53 @@ async function cancelAppointment(req, res) {
   }
 }
 
-module.exports = { bookAppointment, getAppointments, getAppointmentById, updateStatus, cancelAppointment };
+// POST /api/appointments/:id/chat — Add a chat message
+async function addChatMessage(req, res) {
+  try {
+    const appt = await Appointment.findById(req.params.id);
+    if (!appt) return res.status(404).json({ error: 'Appointment not found' });
+
+    if (req.userRole === 'patient' && appt.patientId !== req.userId) return res.status(403).json({ error: 'Forbidden' });
+    if (req.userRole === 'doctor' && appt.doctorId !== req.userId) return res.status(403).json({ error: 'Forbidden' });
+
+    const { message, senderName } = req.body;
+    if (!message) return res.status(400).json({ error: 'Message is required' });
+
+    appt.chat.push({
+      senderId: req.userId,
+      senderName: senderName || req.userRole,
+      role: req.userRole,
+      message,
+      timestamp: new Date()
+    });
+
+    await appt.save();
+    res.json(appt.chat);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}
+
+// GET /api/appointments/doctor/:doctorId/availability — public/patient view of doctor schedule
+async function getDoctorAvailability(req, res) {
+  try {
+    const { doctorId } = req.params;
+    const appointments = await Appointment.find({
+      doctorId,
+      status: { $in: ['pending', 'confirmed'] }
+    }).select('appointmentDate startTime status');
+    res.json(appointments);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}
+
+module.exports = { 
+  bookAppointment, 
+  getAppointments, 
+  getAppointmentById, 
+  updateStatus, 
+  cancelAppointment,
+  getDoctorAvailability,
+  addChatMessage
+};

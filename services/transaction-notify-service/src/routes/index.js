@@ -10,6 +10,7 @@ router.get('/payments', requireRole(), paymentCtrl.getPayments);
 router.get('/payments/:id', requireRole(), paymentCtrl.getPaymentById);
 router.post('/payments/confirm/:paymentId', requireRole(), paymentCtrl.confirmPayment);
 router.post('/payments/refund/:id', requireRole('admin'), paymentCtrl.refundPayment);
+router.patch('/payments/:id/status', requireRole('admin'), paymentCtrl.updatePaymentStatus);
 
 // Stripe webhook — raw body required (mounted separately in index.js)
 // router.post('/payments/webhook', paymentCtrl.handleWebhook); // mounted in index.js

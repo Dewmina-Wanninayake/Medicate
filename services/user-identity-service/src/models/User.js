@@ -10,6 +10,7 @@ const userSchema = new mongoose.Schema(
     phone: { type: String },
     isVerified: { type: Boolean, default: false }, // for doctor verification by admin
     isActive: { type: Boolean, default: true },
+    avatar: { type: String },
 
     // Patient-specific fields
     dateOfBirth: { type: Date },

@@ -9,11 +9,14 @@ const prescriptionCtrl = require('../controllers/prescriptionController');
 router.post('/records/upload', requireRole('patient', 'doctor'), upload.single('file'), recordCtrl.uploadRecord);
 router.get('/records', requireRole(), recordCtrl.getRecords);
 router.get('/records/:id', requireRole(), recordCtrl.getRecordById);
+router.patch('/records/:id', requireRole('patient', 'doctor', 'admin'), recordCtrl.updateRecord);
 router.delete('/records/:id', requireRole('patient', 'admin'), recordCtrl.deleteRecord);
 
 // Prescriptions
 router.post('/prescriptions', requireRole('doctor'), prescriptionCtrl.createPrescription);
 router.get('/prescriptions', requireRole(), prescriptionCtrl.getPrescriptions);
 router.get('/prescriptions/:id', requireRole(), prescriptionCtrl.getPrescriptionById);
+router.patch('/prescriptions/:id', requireRole('doctor', 'admin'), prescriptionCtrl.updatePrescription);
+router.delete('/prescriptions/:id', requireRole('doctor', 'admin'), prescriptionCtrl.deletePrescription);
 
 module.exports = router;

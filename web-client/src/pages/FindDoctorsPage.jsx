@@ -9,6 +9,7 @@ import { Badge } from '../components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar';
 import { Skeleton } from '../components/ui/skeleton';
 import { toast } from 'sonner';
+import DoctorProfileModal from '../components/DoctorProfileModal';
 
 const specialties = [
   'General Physician', 'Cardiologist', 'Dermatologist', 
@@ -21,6 +22,8 @@ export default function FindDoctorsPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSpecialty, setSelectedSpecialty] = useState(null);
+  const [selectedDoctor, setSelectedDoctor] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     fetchDoctors();
@@ -143,7 +146,7 @@ export default function FindDoctorsPage() {
               <CardHeader className="flex-row gap-4 space-y-0 p-6">
                 <div className="relative">
                   <Avatar className="h-20 w-20 rounded-2xl border-2 border-white shadow-lg transition-transform duration-500 group-hover:scale-110">
-                    <AvatarImage src={doc.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${doc.name}`} />
+                    <AvatarImage src={doc.avatar || `https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?q=80&w=400&h=400&auto=format&fit=crop`} />
                     <AvatarFallback>{doc.name?.[0]}</AvatarFallback>
                   </Avatar>
                   <div className="absolute -bottom-1 -right-1 bg-green-500 w-5 h-5 rounded-full border-2 border-white shadow-sm" title="Available Now" />
@@ -157,6 +160,13 @@ export default function FindDoctorsPage() {
                     </div>
                   </div>
                   <CardDescription className="text-primary font-medium text-sm tracking-wide uppercase">{doc.specialization || 'General Physician'}</CardDescription>
+                  <div className="flex items-center gap-2 mt-2">
+                    <div className="flex -space-x-2">
+                      <div className="w-3 h-3 rounded-full bg-primary" title="Booked" />
+                      <div className="w-3 h-3 rounded-full bg-yellow-400 border-2 border-white" title="Pending" />
+                    </div>
+                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Live Schedule Enabled</span>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent className="p-6 pt-0">
@@ -165,24 +175,29 @@ export default function FindDoctorsPage() {
                         <div className="p-1.5 rounded-lg bg-muted">
                             <Clock className="w-4 h-4" />
                         </div>
-                        <span>8+ Years Exp.</span>
+                        <span>{doc.experience || '5'}+ Years Exp.</span>
                     </div>
                     <div className="flex items-center gap-2 text-muted-foreground text-sm">
                         <div className="p-1.5 rounded-lg bg-muted">
                             <MapPin className="w-4 h-4" />
                         </div>
-                        <span>London, UK</span>
+                        <span className="truncate">{doc.address || 'Global'}</span>
                     </div>
                 </div>
                 
                 <div className="flex flex-wrap gap-2">
+                  <Badge variant="secondary" className="rounded-lg py-1 bg-primary/5 text-primary border-none">
+                    ${doc.consultationFee || '100'} / session
+                  </Badge>
                   <Badge variant="secondary" className="rounded-lg py-1">Telemedicine</Badge>
-                  <Badge variant="secondary" className="rounded-lg py-1">English</Badge>
-                  <Badge variant="secondary" className="rounded-lg py-1">Spanish</Badge>
+                  <Badge variant="secondary" className="rounded-lg py-1">Verified</Badge>
                 </div>
               </CardContent>
               <CardFooter className="p-6 pt-0">
-                <Button className="w-full rounded-2xl py-6 bg-primary/10 hover:bg-primary text-primary hover:text-primary-foreground border-none transition-all duration-300 group/btn font-semibold shadow-none hover:shadow-lg">
+                <Button 
+                  onClick={() => { setSelectedDoctor(doc); setIsModalOpen(true); }}
+                  className="w-full rounded-2xl py-6 bg-primary/10 hover:bg-primary text-primary hover:text-primary-foreground border-none transition-all duration-300 group/btn font-semibold shadow-none hover:shadow-lg"
+                >
                   View Profile & Book
                   <ChevronRight className="ml-2 w-4 h-4 transition-transform group-hover/btn:translate-x-1" />
                 </Button>
@@ -231,6 +246,12 @@ export default function FindDoctorsPage() {
             </div>
         </div>
       </Card>
+
+      <DoctorProfileModal 
+        doctor={selectedDoctor} 
+        isOpen={isModalOpen} 
+        onClose={() => { setIsModalOpen(false); setSelectedDoctor(null); }} 
+      />
     </div>
   );
 }

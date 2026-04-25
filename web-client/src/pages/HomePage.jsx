@@ -1,11 +1,12 @@
-// src/pages/HomePage.jsx
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Heart, Calendar, Shield, Stethoscope, ArrowRight, Video, Clock, Star } from 'lucide-react';
+import { Heart, Calendar, Shield, Stethoscope, ArrowRight, Video, Clock, Star, ShieldCheck } from 'lucide-react';
 import Logo from '../assets/medicate-logo.png';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
+import { toast } from 'sonner';
+import SymptomWizard from '../components/SymptomWizard';
 
 const features = [
   { icon: Video, title: 'Video Consultations', desc: 'Secure HD video calls with certified doctors from anywhere, anytime.' },
@@ -18,12 +19,13 @@ const features = [
 
 export default function HomePage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-background">
       {/* Hero */}
       <section className="max-w-7xl mx-auto px-6 py-16 pb-24">
-        <div className="grid md:grid-cols-2 gap-12 items-center">
+        <div className="grid md:grid-cols-2 gap-12 items-stretch">
           <div>
             <Badge className="mb-4 rounded-full bg-secondary text-secondary-foreground">
               AI-Powered Healthcare
@@ -37,32 +39,40 @@ export default function HomePage() {
             </p>
 
             {/* AI Symptom Checker Container */}
-            <div className="bg-card border border-border/50 rounded-3xl p-6 shadow-sm max-w-lg">
-              <div className="flex items-center gap-2 mb-4">
-                <Shield className="w-5 h-5 text-muted-foreground" />
-                <span className="font-medium text-foreground">AI Symptom Checker</span>
+            <div className="bg-card border border-border/50 rounded-[40px] p-8 shadow-2xl shadow-primary/5 max-w-xl animate-in fade-in slide-in-from-left-8 duration-1000 delay-300">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center">
+                    <Shield className="w-6 h-6 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-foreground">AI Symptom Checker</h3>
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">Instant Analysis</p>
+                  </div>
+                </div>
+                <Badge variant="outline" className="rounded-full border-primary/20 text-primary">
+                  Live AI
+                </Badge>
               </div>
-              <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  placeholder="Describe your symptoms..."
-                  className="flex-1 bg-transparent border border-primary/30 rounded-full px-6 py-3 outline-none focus:border-primary transition-colors text-sm"
-                />
-                <Button className="rounded-full px-8 py-3 bg-primary hover:bg-primary/90 text-primary-foreground font-medium h-auto">
-                  Analyze
-                </Button>
+              
+              <SymptomWizard />
+              
+              <div className="mt-6 flex items-center gap-2 text-[10px] text-muted-foreground font-medium justify-center">
+                <ShieldCheck className="w-3 h-3 text-green-500" />
+                <span>Private & Secure · Powered by Gemini 2.5</span>
               </div>
             </div>
           </div>
 
           {/* Hero visual */}
-          <div className="relative h-full flex items-center justify-end">
-            <div className="relative w-full max-w-[500px] rounded-[48px] overflow-hidden shadow-2xl">
+          <div className="relative h-full flex items-stretch">
+            <div className="relative w-full rounded-[48px] overflow-hidden shadow-2xl bg-muted/20">
               <img
-                src="https://images.unsplash.com/photo-1559839734-2b71ea197ec2?q=80&w=800&auto=format&fit=crop"
-                alt="Doctor holding phone"
-                className="w-full h-auto object-cover aspect-[4/3] md:aspect-[4/5]"
+                src="/doctor_using_phone.png"
+                alt="Doctor using phone"
+                className="w-full h-full object-cover"
               />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
             </div>
           </div>
         </div>
@@ -96,23 +106,25 @@ export default function HomePage() {
       </section>
 
       {/* CTA */}
-      <section className="max-w-7xl mx-auto px-6 py-16 mb-16">
-        <Card className="rounded-[48px] bg-gradient-to-r from-primary to-accent text-white border-none shadow-2xl overflow-hidden">
-          <CardContent className="p-16 text-center relative">
-            <div className="relative">
-              <h2 className="text-4xl font-bold mb-4">Ready to Get Started?</h2>
-              <p className="text-xl mb-8 text-white/90">
-                Join thousands of patients who trust Medicate for their healthcare needs
-              </p>
-              <Link to="/register">
-                <Button size="lg" className="rounded-full px-12 py-6 text-lg bg-white text-primary hover:bg-white/90 shadow-xl h-auto">
-                  Create Free Account
-                </Button>
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
-      </section>
+      {!user && (
+        <section className="max-w-7xl mx-auto px-6 py-16 mb-16">
+          <Card className="rounded-[48px] bg-gradient-to-r from-primary to-accent text-white border-none shadow-2xl overflow-hidden">
+            <CardContent className="p-16 text-center relative">
+              <div className="relative">
+                <h2 className="text-4xl font-bold mb-4">Ready to Get Started?</h2>
+                <p className="text-xl mb-8 text-white/90">
+                  Join thousands of patients who trust Medicate for their healthcare needs
+                </p>
+                <Link to="/register">
+                  <Button size="lg" className="rounded-full px-12 py-6 text-lg bg-white text-primary hover:bg-white/90 shadow-xl h-auto">
+                    Create Free Account
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+      )}
 
       {/* Footer */}
       <footer className="bg-card border-t border-border">

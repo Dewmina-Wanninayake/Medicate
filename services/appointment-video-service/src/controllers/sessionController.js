@@ -110,9 +110,12 @@ async function getToken(req, res) {
     }
 
     if (!appt.sessionId) {
-      return res.status(400).json({
-        error: 'Session has not been started yet. The doctor must call POST /sessions/start first.',
-      });
+      const channelName = appt._id.toString();
+      const { appId } = generateRtcToken(channelName, req.userId, 'publisher');
+      appt.sessionId = channelName;
+      appt.agoraAppId = appId;
+      appt.sessionStartedAt = new Date();
+      await appt.save();
     }
 
     if (appt.sessionEndedAt) {

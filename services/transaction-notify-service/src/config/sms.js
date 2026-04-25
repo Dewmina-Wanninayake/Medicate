@@ -20,12 +20,17 @@ async function sendSMS({ to, body }) {
       console.log(`[SMS MOCK] To: ${to} | Body: ${body}`);
       return;
     }
+
+    // Normalize to E.164: remove all non-digits, then prepend +
+    const digitsOnly = to.replace(/\D/g, '');
+    const e164Phone = `+${digitsOnly}`;
+
     const msg = await client.messages.create({
       body,
-      from: process.env.TWILIO_PHONE_NUMBER,
-      to,
+      from: process.env.TWILIO_FROM_NUMBER,
+      to: e164Phone,
     });
-    console.log(`SMS sent to ${to}: ${msg.sid}`);
+    console.log(`SMS sent to ${e164Phone}: ${msg.sid}`);
     return msg;
   } catch (err) {
     console.error('SMS send error:', err.message);

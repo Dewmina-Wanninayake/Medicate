@@ -83,4 +83,52 @@ async function getPrescriptionById(req, res) {
   }
 }
 
-module.exports = { createPrescription, getPrescriptions, getPrescriptionById };
+// PATCH /api/prescriptions/:id - update a prescription
+async function updatePrescription(req, res) {
+  try {
+    const p = await Prescription.findById(req.params.id);
+    if (!p) return res.status(404).json({ error: 'Prescription not found' });
+
+    // Access control: only the issuing doctor can update (or admin)
+    if (req.userRole === 'doctor' && p.doctorId !== req.userId) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+    if (req.userRole === 'patient') {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+
+    const { medications, diagnosis, notes, followUpDate } = req.body;
+    if (medications) p.medications = medications;
+    if (diagnosis !== undefined) p.diagnosis = diagnosis;
+    if (notes !== undefined) p.notes = notes;
+    if (followUpDate !== undefined) p.followUpDate = followUpDate;
+
+    await p.save();
+    res.json(p);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}
+
+// DELETE /api/prescriptions/:id - delete a prescription
+async function deletePrescription(req, res) {
+  try {
+    const p = await Prescription.findById(req.params.id);
+    if (!p) return res.status(404).json({ error: 'Prescription not found' });
+
+    // Access control: only issuing doctor or admin can delete
+    if (req.userRole === 'doctor' && p.doctorId !== req.userId) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+    if (req.userRole === 'patient') {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+
+    await Prescription.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Prescription deleted' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}
+
+module.exports = { createPrescription, getPrescriptions, getPrescriptionById, updatePrescription, deletePrescription };

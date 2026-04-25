@@ -1,7 +1,7 @@
 // src/components/layout/Header.jsx
 import { Menu, Search, Bell } from 'lucide-react';
 import Logo from '../../assets/medicate-logo.png';
-import { Link } from 'react-router';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';

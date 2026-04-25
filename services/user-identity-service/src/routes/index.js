@@ -23,5 +23,6 @@ router.get('/admin/users', requireRole('admin'), adminCtrl.listUsers);
 router.patch('/admin/doctors/:id/verify', requireRole('admin'), adminCtrl.verifyDoctor);
 router.patch('/admin/users/:id/status', requireRole('admin'), adminCtrl.toggleUserStatus);
 router.delete('/admin/users/:id', requireRole('admin'), adminCtrl.deleteUser);
+router.put('/admin/users/:id', requireRole('admin'), adminCtrl.updateUser);
 
 module.exports = router;
