@@ -10,7 +10,7 @@ import { Badge } from '../components/ui/badge';
 import { 
   FileText, Upload, Trash2, Download, 
   X, FolderOpen, ExternalLink, Edit2, 
-  Loader2, Search, Filter 
+  Loader2, Search, Filter, Eye
 } from 'lucide-react';
 import { recordsAPI } from '../services/api';
 import { toast } from 'sonner';
@@ -33,6 +33,8 @@ export default function RecordsPage() {
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState(null);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [previewRecord, setPreviewRecord] = useState(null);
 
   useEffect(() => {
     fetchRecords();
@@ -93,11 +95,6 @@ export default function RecordsPage() {
                 />
               </div>
               <div className="flex gap-2">
-                <Link to="/reports">
-                  <Button variant="outline" className="rounded-full h-12 px-6 gap-2 border-primary/20 hover:bg-primary/5">
-                    <Filter className="w-4 h-4" /> Reports
-                  </Button>
-                </Link>
                 <Button onClick={() => setIsUploadOpen(true)} className="rounded-full bg-primary hover:bg-accent h-12 px-8 shadow-xl shadow-primary/20 gap-2">
                   <Upload className="w-4 h-4" /> Upload
                 </Button>
@@ -122,6 +119,7 @@ export default function RecordsPage() {
               record={record} 
               onDelete={handleDelete}
               onEdit={() => { setEditingRecord(record); setIsEditOpen(true); }}
+              onView={() => { setPreviewRecord(record); setIsPreviewOpen(true); }}
             />
           ))}
         </div>
@@ -139,11 +137,17 @@ export default function RecordsPage() {
         onClose={() => { setIsEditOpen(false); setEditingRecord(null); }}
         onSuccess={fetchRecords}
       />
+
+      <PreviewDialog 
+        isOpen={isPreviewOpen}
+        record={previewRecord}
+        onClose={() => { setIsPreviewOpen(false); setPreviewRecord(null); }}
+      />
     </div>
   );
 }
 
-function RecordCard({ record, onDelete, onEdit }) {
+function RecordCard({ record, onDelete, onEdit, onView }) {
   return (
     <Card className="rounded-[40px] border-none shadow-lg hover:shadow-2xl transition-all hover:-translate-y-2 group bg-gradient-to-br from-card to-muted/20 relative overflow-hidden">
       <div className="absolute top-0 left-0 w-2 h-full bg-primary opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -178,8 +182,8 @@ function RecordCard({ record, onDelete, onEdit }) {
             <FolderOpen className="w-4 h-4 text-muted-foreground shrink-0" />
             <span className="text-xs text-muted-foreground truncate italic font-medium">{record.fileName || 'document.pdf'}</span>
           </div>
-          <Button variant="outline" size="sm" className="rounded-full border-primary/20 hover:bg-primary/5 text-[10px] font-black uppercase tracking-widest px-4 h-8" onClick={() => window.open(record.fileUrl || '#', '_blank')}>
-            View <ExternalLink className="w-3 h-3 ml-1.5" />
+          <Button variant="outline" size="sm" className="rounded-full border-primary/20 hover:bg-primary/5 text-[10px] font-black uppercase tracking-widest px-4 h-8" onClick={onView}>
+            Preview <Eye className="w-3 h-3 ml-1.5" />
           </Button>
         </div>
       </CardContent>
@@ -375,6 +379,37 @@ function EditDialog({ isOpen, record, onClose, onSuccess }) {
             </Button>
           </div>
         </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function PreviewDialog({ isOpen, record, onClose }) {
+  if (!record) return null;
+  const isImage = record.mimeType?.startsWith('image/') || record.fileName?.match(/\.(jpg|jpeg|png)$/i);
+  
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-4xl h-[85vh] flex flex-col p-8 rounded-[48px] bg-background border-none shadow-2xl">
+        <DialogHeader>
+          <DialogTitle className="text-3xl font-black truncate pr-8 flex items-center gap-3">
+            <FileText className="w-8 h-8 text-primary" />
+            {record.title}
+          </DialogTitle>
+        </DialogHeader>
+        <div className="flex-1 bg-muted/10 border-2 border-dashed border-muted/30 rounded-3xl overflow-hidden mt-6 relative flex items-center justify-center">
+          {isImage ? (
+            <img src={record.fileUrl} alt={record.title} className="max-w-full max-h-full object-contain p-4" />
+          ) : (
+            <iframe src={record.fileUrl} className="w-full h-full border-none bg-white rounded-2xl" title={record.title} />
+          )}
+        </div>
+        <div className="flex justify-end gap-4 mt-8">
+          <Button variant="ghost" onClick={onClose} className="rounded-2xl h-14 px-8 font-bold text-muted-foreground">Close</Button>
+          <Button onClick={() => window.open(record.fileUrl || '#', '_blank')} className="rounded-2xl h-14 px-8 bg-primary hover:bg-accent font-black gap-2 shadow-xl shadow-primary/20">
+            <Download className="w-5 h-5" /> Download Original
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );

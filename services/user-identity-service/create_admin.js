@@ -16,9 +16,9 @@ mongoose.connect(URI, {
   }
 
   const admin = new User({
-    name: 'Super Admin',
+    name: 'Admin Medicate',
     email: 'admin@medicate.com',
-    password: 'AdminPassword123!',
+    password: 'password123',
     role: 'admin',
     isVerified: true,
     isActive: true

@@ -19,7 +19,12 @@ async function uploadRecord(req, res) {
       uploadedByRole: req.userRole,
     });
 
-    res.status(201).json(record);
+    const recordObj = record.toObject();
+    // Use posix.basename to handle paths correctly regardless of platform
+    recordObj.fileUrl = `/uploads/${path.posix.basename(record.filePath.replace(/\\/g, '/'))}`;
+    
+    console.log(`[Records] File uploaded: ${recordObj.fileName}, stored at: ${record.filePath}, URL: ${recordObj.fileUrl}`);
+    res.status(201).json(recordObj);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -42,7 +47,17 @@ async function getRecords(req, res) {
     }
 
     const records = await MedicalRecord.find(filter).sort({ createdAt: -1 });
-    res.json(records);
+    const recordsWithUrl = records.map(record => {
+      const recordObj = record.toObject();
+      if (recordObj.filePath) {
+        // Ensure path uses forward slashes before getting basename
+        const cleanPath = recordObj.filePath.replace(/\\/g, '/');
+        recordObj.fileUrl = `/uploads/${path.posix.basename(cleanPath)}`;
+      }
+      return recordObj;
+    });
+    console.log(`[Records] Returning ${recordsWithUrl.length} records for user ${req.userId}`);
+    res.json(recordsWithUrl);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -59,7 +74,12 @@ async function getRecordById(req, res) {
       return res.status(403).json({ error: 'Forbidden' });
     }
 
-    res.json(record);
+    const recordObj = record.toObject();
+    if (recordObj.filePath) {
+      recordObj.fileUrl = `/uploads/${path.basename(recordObj.filePath)}`;
+    }
+
+    res.json(recordObj);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -82,12 +102,35 @@ async function updateRecord(req, res) {
     if (recordType) record.recordType = recordType;
 
     await record.save();
-    res.json(record);
+    
+    const recordObj = record.toObject();
+    if (recordObj.filePath) {
+      recordObj.fileUrl = `/uploads/${path.basename(recordObj.filePath)}`;
+    }
+    
+    res.json(recordObj);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 }
 
-module.exports = { uploadRecord, getRecords, getRecordById, deleteRecord, updateRecord };
+
+// DELETE /api/records/:id
+async function deleteRecord(req, res) {
+  try {
+    const record = await MedicalRecord.findById(req.params.id);
+    if (!record) return res.status(404).json({ error: 'Record not found' });
+
+    // Access control: only owner or admin can delete
+    if (req.userRole === 'patient' && record.patientId !== req.userId) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+
+    await MedicalRecord.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Medical record deleted' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}
 
 module.exports = { uploadRecord, getRecords, getRecordById, deleteRecord, updateRecord };

@@ -109,7 +109,7 @@ export default function DoctorProfileModal({ doctor, isOpen, onClose }) {
                 <div className="flex-1 p-12 space-y-8 overflow-y-auto bg-white">
               <div className="flex items-center gap-6">
                 <Avatar className="h-24 w-24 rounded-3xl border-4 border-primary/5 shadow-xl">
-                  <AvatarImage src={doctor.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${doctor.name}`} />
+                  <AvatarImage src={doctor.avatar || `https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?q=80&w=400&h=400&auto=format&fit=crop`} />
                   <AvatarFallback>{doctor.name?.[0]}</AvatarFallback>
                 </Avatar>
                 <div>

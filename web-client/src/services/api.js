@@ -101,12 +101,21 @@ export const paymentsAPI = {
 
 // ── Medical Records ───────────────────────────────────────────────────────────
 export const recordsAPI = {
-  upload: (formData) =>
-    api
-      .post('/api/records/upload', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      })
-      .then((r) => r.data),
+  upload: async (formData) => {
+    const token = localStorage.getItem('token');
+    const res = await fetch(`${API_BASE_URL}/api/records/upload`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`
+      },
+      body: formData
+    });
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.error || 'Upload failed');
+    }
+    return res.json();
+  },
   list: (params) => api.get('/api/records', { params }).then((r) => r.data),
   getById: (id) => api.get(`/api/records/${id}`).then((r) => r.data),
   update: (id, data) => api.patch(`/api/records/${id}`, data).then((r) => r.data),
@@ -118,6 +127,8 @@ export const prescriptionsAPI = {
   create: (data) => api.post('/api/prescriptions', data).then((r) => r.data),
   list: () => api.get('/api/prescriptions').then((r) => r.data),
   getById: (id) => api.get(`/api/prescriptions/${id}`).then((r) => r.data),
+  update: (id, data) => api.patch(`/api/prescriptions/${id}`, data).then((r) => r.data),
+  delete: (id) => api.delete(`/api/prescriptions/${id}`).then((r) => r.data),
 };
 
 // ── Notifications ─────────────────────────────────────────────────────────────

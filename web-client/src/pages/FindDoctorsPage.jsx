@@ -146,7 +146,7 @@ export default function FindDoctorsPage() {
               <CardHeader className="flex-row gap-4 space-y-0 p-6">
                 <div className="relative">
                   <Avatar className="h-20 w-20 rounded-2xl border-2 border-white shadow-lg transition-transform duration-500 group-hover:scale-110">
-                    <AvatarImage src={doc.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${doc.name}`} />
+                    <AvatarImage src={doc.avatar || `https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?q=80&w=400&h=400&auto=format&fit=crop`} />
                     <AvatarFallback>{doc.name?.[0]}</AvatarFallback>
                   </Avatar>
                   <div className="absolute -bottom-1 -right-1 bg-green-500 w-5 h-5 rounded-full border-2 border-white shadow-sm" title="Available Now" />

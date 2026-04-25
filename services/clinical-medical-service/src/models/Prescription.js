@@ -23,5 +23,3 @@ const prescriptionSchema = new mongoose.Schema(
 );
 
 module.exports = mongoose.model('Prescription', prescriptionSchema);
-
-module.exports = mongoose.model('Prescription', prescriptionSchema);

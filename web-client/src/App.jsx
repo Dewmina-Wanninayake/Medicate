@@ -14,7 +14,6 @@ import AdminDashboard from './pages/AdminDashboard';
 import AppointmentsPage from './pages/AppointmentsPage';
 import RecordsPage from './pages/RecordsPage';
 import PrescriptionsPage from './pages/PrescriptionsPage';
-import ReportsPage from './pages/ReportsPage';
 import PaymentsPage from './pages/PaymentsPage';
 import SettingsPage from './pages/SettingsPage';
 import PatientsPage from './pages/PatientsPage';
@@ -53,7 +52,6 @@ export default function App() {
               <Route path="/appointments" element={<ProtectedRoute><AppointmentsPage /></ProtectedRoute>} />
               <Route path="/records" element={<ProtectedRoute><RecordsPage /></ProtectedRoute>} />
               <Route path="/prescriptions" element={<ProtectedRoute><PrescriptionsPage /></ProtectedRoute>} />
-              <Route path="/reports" element={<ProtectedRoute><ReportsPage /></ProtectedRoute>} />
               <Route path="/payments" element={<ProtectedRoute><PaymentsPage /></ProtectedRoute>} />
               <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
               <Route path="/patients" element={<ProtectedRoute><PatientsPage /></ProtectedRoute>} />

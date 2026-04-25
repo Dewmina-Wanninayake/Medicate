@@ -1,6 +1,39 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
+const MALE_DOCTOR_AVATARS = [
+  'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?q=80&w=400&h=400&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1622253692010-333f2da6031d?q=80&w=400&h=400&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1614608682850-e0d6ed316d47?q=80&w=400&h=400&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1537368910025-700350fe46c7?q=80&w=400&h=400&auto=format&fit=crop'
+];
+
+const FEMALE_DOCTOR_AVATARS = [
+  'https://images.unsplash.com/photo-1559839734-2b71f1536780?q=80&w=400&h=400&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1594824476967-48c8b964273f?q=80&w=400&h=400&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1638202993928-7267aad84c31?q=80&w=400&h=400&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1551601651-2a8555f1a136?q=80&w=400&h=400&auto=format&fit=crop'
+];
+
+function getGenderByName(name) {
+  const lowercaseName = name.toLowerCase().replace(/^(dr\.?\s*)+/gi, '').trim();
+  
+  // Sri Lankan female name indicators
+  const femalePatterns = [/nilanthi/i, /anula/i, /sunethra/i, /padmini/i, /kumari/i, /priyani/i, /dilani/i];
+  const femaleSuffixes = ['i', 'thi', 'ika', 'ini'];
+  
+  if (femalePatterns.some(p => p.test(lowercaseName))) return 'female';
+  if (femaleSuffixes.some(s => lowercaseName.split(' ')[0].endsWith(s))) return 'female';
+  
+  return 'male'; // default to male for this context
+}
+
+function getRandomDoctorAvatar(name) {
+  const gender = getGenderByName(name);
+  const avatars = gender === 'female' ? FEMALE_DOCTOR_AVATARS : MALE_DOCTOR_AVATARS;
+  return avatars[Math.floor(Math.random() * avatars.length)];
+}
+
 function signToken(user) {
   return jwt.sign(
     { id: user._id, role: user.role, email: user.email },
@@ -50,7 +83,14 @@ async function register(req, res) {
 
     const userData = { name, email, password, role, phone };
     if (role === 'doctor') {
-      Object.assign(userData, { specialization, licenseNumber, experience, consultationFee, isVerified: false });
+      Object.assign(userData, { 
+        specialization, 
+        licenseNumber, 
+        experience, 
+        consultationFee, 
+        isVerified: false,
+        avatar: getRandomDoctorAvatar(name)
+      });
     }
 
     const user = await User.create(userData);

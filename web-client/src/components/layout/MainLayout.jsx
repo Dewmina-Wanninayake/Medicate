@@ -18,7 +18,6 @@ const patientNav = [
   { name: 'Appointments',   href: '/appointments',     icon: Calendar },
   { name: 'My Records',     href: '/records',          icon: FolderOpen },
   { name: 'Prescriptions',  href: '/prescriptions',    icon: Pill },
-  { name: 'Reports',        href: '/reports',          icon: FileText },
   { name: 'Payments',       href: '/payments',         icon: DollarSign },
   { name: 'Settings',       href: '/settings',         icon: Settings },
 ];
