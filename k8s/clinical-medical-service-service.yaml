@@ -2,7 +2,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: clinical-medical-service
-  namespace: healthcare
+  
   labels:
     io.kompose.service: clinical-medical-service
 spec:
