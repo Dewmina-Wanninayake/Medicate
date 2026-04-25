@@ -14,11 +14,26 @@ async function getMe(req, res) {
 // PUT /api/users/me
 async function updateMe(req, res) {
   try {
-    const forbidden = ['password', 'role', 'email', 'isVerified'];
-    forbidden.forEach((f) => delete req.body[f]);
+    const userToUpdate = await User.findById(req.userId);
+    if (!userToUpdate) return res.status(404).json({ error: 'User not found' });
 
-    const user = await User.findByIdAndUpdate(req.userId, req.body, { new: true, runValidators: true }).select('-password');
-    if (!user) return res.status(404).json({ error: 'User not found' });
+    const role = userToUpdate.role;
+    const allowedFields = ['name', 'phone', 'avatar'];
+
+    if (role === 'patient') {
+      allowedFields.push('dateOfBirth', 'bloodGroup', 'address');
+    } else if (role === 'doctor') {
+      allowedFields.push('specialization', 'licenseNumber', 'experience', 'consultationFee', 'bio');
+    }
+
+    const updates = {};
+    for (const field of allowedFields) {
+      if (req.body[field] !== undefined) {
+        updates[field] = req.body[field];
+      }
+    }
+
+    const user = await User.findByIdAndUpdate(req.userId, updates, { new: true, runValidators: true }).select('-password');
     res.json(user);
   } catch (err) {
     res.status(500).json({ error: err.message });

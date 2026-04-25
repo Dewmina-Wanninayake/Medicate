@@ -28,6 +28,7 @@ const doctorNav = [
   { name: 'Patients',       href: '/patients',         icon: Users },
   { name: 'Prescriptions',  href: '/prescriptions',    icon: Pill },
   { name: 'Telemedicine',   href: '/telemedicine',     icon: Video },
+  { name: 'Payments',       href: '/payments',         icon: DollarSign },
   { name: 'Schedule',       href: '/schedule',         icon: Clock },
   { name: 'Messages',       href: '/messages',         icon: Home },
   { name: 'Profile',        href: '/profile',          icon: Settings },
